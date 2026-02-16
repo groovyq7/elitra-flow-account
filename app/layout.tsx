@@ -13,6 +13,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { CampaignRibbon } from "@/components/ui/campaign-ribbon";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { SpiceFlowProvider } from "@/components/providers/SpiceFlowProvider";
+import { GlobalModals } from "@/components/SpiceFlow/GlobalModals";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -105,6 +106,7 @@ export default function RootLayout({
                 {/* <CampaignRibbon /> */}
                 <MainNav />
                 {children}
+                <GlobalModals />
                 <AppToaster />
                 <Toaster />
                 <Analytics />
