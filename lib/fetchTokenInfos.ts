@@ -1,0 +1,91 @@
+import { getTokenImage } from "@/lib/utils";
+import {
+  getTokenBalance,
+  getTokenPrice,
+  getVaultRate,
+} from "@/lib/utils/get-token-balance";
+import { TokenType, Vault } from "./types";
+import { VAULTS } from "./contracts/vault-registry";
+
+// address: user address, chain: wagmi/viem chain object
+export async function fetchTokenInfos(
+  tokens: Array<TokenType>,
+  address: `0x${string}` | undefined,
+  chain: any,
+  vaultsData?: Vault[]
+): Promise<any[]> {
+  console.log("Fetching token infos for", tokens, address, chain, vaultsData);
+  const balances = await Promise.all(
+    tokens.map(async (token) => {
+      // Fetch real balance using getTokenBalance
+      const { formatted } = await getTokenBalance(
+        token.address,
+        address,
+        chain
+      );
+      const available = Number(formatted);
+      let price = 0;
+      if (token.symbol.toLowerCase().startsWith("e")) {
+        const tokenPrice = (
+          await getTokenPrice(token.symbol.toUpperCase().replace("E", ""))
+        ).price;
+        const ratio = await getVaultRate(token.symbol, chain);
+        price = tokenPrice * Number(ratio.rate);
+      } else {
+        price = (await getTokenPrice(token.symbol)).price;
+      }
+
+      const vaultApy =
+        vaultsData && vaultsData.length > 0
+          ? vaultsData.find(
+              (v) =>
+                v.id.toLowerCase() === token.address.toLowerCase() ||
+                v.token0.address.toLowerCase() === token.address.toLowerCase()
+            )?.apy
+          : VAULTS[chain.id]?.find(
+              (v) =>
+                v.id.toLowerCase() === token.address.toLowerCase() ||
+                v.token0.address.toLowerCase() === token.address.toLowerCase()
+            )?.apy || 1;
+      const apy = Number(vaultApy);
+      const availableUSD = (available * price * 100) / 100;
+      const yearlyReward = (((available * apy) / 100) * 100) / 100;
+      const yearlyRewardUSD = (yearlyReward * price * 100) / 100;
+
+      return {
+        symbol: token.symbol,
+        token: token,
+        icon: getTokenImage(token.symbol),
+        available,
+        availableUSD,
+        apy,
+        yearlyReward,
+        yearlyRewardUSD,
+        price,
+      };
+    })
+  );
+  console.log("Fetched token infos", balances);
+  return balances;
+}
+
+export function mergeTokenInfos(external: any[], embedded: any[]): any[] {
+  const merged: Record<string, any> = {};
+
+  for (const token of external) {
+    merged[token.symbol] = { ...token };
+  }
+
+  for (const token of embedded) {
+    if (merged[token.symbol]) {
+      merged[token.symbol].available += token.available;
+      merged[token.symbol].availableUSD += token.availableUSD;
+      merged[token.symbol].yearlyReward += token.yearlyReward;
+      merged[token.symbol].yearlyRewardUSD += token.yearlyRewardUSD;
+    } else {
+      merged[token.symbol] = { ...token };
+    }
+  }
+
+  return Object.values(merged);
+}

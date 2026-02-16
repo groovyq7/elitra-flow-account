@@ -1,0 +1,136 @@
+import { getVaultsByChain, getVaultById } from "@/lib/contracts/vault-registry"
+import type { Vault, UserPosition, VaultTransaction } from "@/lib/types"
+
+export class VaultSDK {
+  private chainId: number
+
+  constructor(chainId: number) {
+    this.chainId = chainId
+  }
+
+  // Vault Data Methods
+  async getVaultList(): Promise<Vault[]> {
+    return getVaultsByChain(this.chainId)
+  }
+
+  async getVaultDetails(vaultId: string): Promise<Vault | null> {
+    const vault = getVaultById(vaultId, this.chainId)
+    return vault || null
+  }
+
+  async getUserPositions(walletAddress: string): Promise<UserPosition[]> {
+    // In production, this would make on-chain calls to get user positions
+    const vaults = await this.getVaultList()
+
+    // Mock implementation - return positions for first 2 vaults
+    return vaults.slice(0, 2).map((vault) => ({
+      vaultId: vault.id,
+      vault,
+      shares: BigInt(Math.floor(Math.random() * 1000000) * Math.pow(10, 18)),
+      assets: BigInt(Math.floor(Math.random() * 5000) * Math.pow(10, vault.token0.decimals)),
+      pendingRewards: BigInt(Math.floor(Math.random() * 100) * Math.pow(10, vault.token0.decimals)),
+    }))
+  }
+
+  async getUserRewards(walletAddress: string, vaultId?: string): Promise<bigint> {
+    // Mock implementation - in production this would be contract calls
+    return BigInt(Math.floor(Math.random() * 50) * Math.pow(10, 18))
+  }
+
+  async getVaultTransactions(walletAddress: string, vaultId?: string): Promise<VaultTransaction[]> {
+    // Mock implementation - in production this would query events
+    return [
+      {
+        hash: "0x1234567890abcdef",
+        type: "deposit",
+        amount: BigInt("1000000000000000000"),
+        timestamp: Date.now() - 86400000, // 1 day ago
+        blockNumber: 18500000,
+      },
+      {
+        hash: "0xabcdef1234567890",
+        type: "withdraw",
+        amount: BigInt("500000000000000000"),
+        timestamp: Date.now() - 172800000, // 2 days ago
+        blockNumber: 18495000,
+      },
+    ]
+  }
+
+  async getAllChainsVaults(): Promise<{ chainId: number; vaults: Vault[] }[]> {
+    // In production, this would query multiple chains
+    const supportedChains = [1, 42161, 137, 10, 8453]
+    return supportedChains.map((chainId) => ({
+      chainId,
+      vaults: getVaultsByChain(chainId),
+    }))
+  }
+
+  async getUserPositionsAllChains(walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
+    // In production, this would query user positions across all chains
+    const supportedChains = [1, 42161, 137, 10, 8453]
+    return supportedChains.map((chainId) => {
+      const sdk = new VaultSDK(chainId)
+      return {
+        chainId,
+        positions: [], // Would be populated with actual positions
+      }
+    })
+  }
+
+  // Utility Methods
+  calculateSharePrice(vault: Vault): number {
+    if (vault.totalSupply === BigInt(0)) return 1
+    return Number(vault.totalAssets) / Number(vault.totalSupply)
+  }
+
+  calculateUserValue(position: UserPosition): number {
+    const sharePrice = this.calculateSharePrice(position.vault)
+    return (Number(position.shares) * sharePrice) / Math.pow(10, position.vault.token0.decimals)
+  }
+
+  // Chain Management
+  setChainId(chainId: number) {
+    this.chainId = chainId
+  }
+
+  getChainId(): number {
+    return this.chainId
+  }
+}
+
+// Export singleton instance
+export const vaultSDK = new VaultSDK(1) // Default to Ethereum mainnet
+
+export class MultiChainVaultSDK {
+  private sdks: Map<number, VaultSDK> = new Map()
+
+  getSDK(chainId: number): VaultSDK {
+    if (!this.sdks.has(chainId)) {
+      this.sdks.set(chainId, new VaultSDK(chainId))
+    }
+    return this.sdks.get(chainId)!
+  }
+
+  async getAllVaults(): Promise<{ chainId: number; vaults: Vault[] }[]> {
+    const supportedChains = [1, 42161, 137, 10, 8453]
+    return Promise.all(
+      supportedChains.map(async (chainId) => ({
+        chainId,
+        vaults: await this.getSDK(chainId).getVaultList(),
+      })),
+    )
+  }
+
+  async getUserPositionsAllChains(walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
+    const supportedChains = [1, 42161, 137, 10, 8453]
+    return Promise.all(
+      supportedChains.map(async (chainId) => ({
+        chainId,
+        positions: await this.getSDK(chainId).getUserPositions(walletAddress),
+      })),
+    )
+  }
+}
+
+export const multiChainVaultSDK = new MultiChainVaultSDK()
