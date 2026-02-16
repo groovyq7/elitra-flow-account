@@ -18,6 +18,7 @@ import {
 } from "@/lib/utils/get-token-balance";
 import { Button } from "./button";
 import { toast } from "@/hooks/use-toast";
+import { CrossChainAccountBadge } from "../SpiceFlow/CrossChainAccountBadge";
 
 export default function MainNav() {
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -154,6 +155,8 @@ export default function MainNav() {
                 )}
               </div>
             </div>
+
+            {authenticated && <CrossChainAccountBadge />}
 
             {authenticated && embeddedWalletAddress && (
               <div className="relative group">
