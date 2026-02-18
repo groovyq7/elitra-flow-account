@@ -15,8 +15,8 @@ import { UserPnlInfo } from "@/lib/types";
 import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
+import { TokenInfo, TokenType, Vault } from "@/lib/types";
 
-// TODO: replace `any[]` props with proper types (TokenInfo[], Vault[], TokenType)
 export function DepositedAssetsTable({
   tokenInfos,
   availableVaults,
@@ -25,10 +25,10 @@ export function DepositedAssetsTable({
   setModalType,
   setIsModalOpen,
 }: {
-  tokenInfos: any[];
-  availableVaults: any[];
+  tokenInfos: TokenInfo[];
+  availableVaults: Vault[];
   fullWidth?: boolean;
-  setSelectedToken: (token: any) => void;
+  setSelectedToken: (token: TokenType) => void;
   setModalType: (type: "deposit") => void;
   setIsModalOpen: (isOpen: boolean) => void;
 }) {

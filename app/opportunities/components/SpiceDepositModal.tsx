@@ -194,6 +194,7 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
 
         // Set the selected asset
         if (normalizedAddress && parsed.symbol) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK hook exposes methods not in type declarations
           (depositInputHook as any).setSelectedAsset?.({
             symbol: parsed.symbol,
             address: normalizedAddress,
@@ -204,6 +205,7 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
 
         // Set the amount
         if (parsed.amount) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK hook exposes methods not in type declarations
           (depositInputHook as any).setAssetAmount?.(parsed.amount);
         }
       }

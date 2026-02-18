@@ -250,7 +250,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       setTxStatus("error");
       setTxModalOpen(true);
       trackWithdrawFailed({
-        reason: (withdrawError as any)?.message,
+        reason: withdrawError?.message,
         tokenSymbol: selectedToken.symbol,
         amountWei: String(parsedAmount),
         amount,

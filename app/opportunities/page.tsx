@@ -19,7 +19,7 @@ import { DepositModal } from "./components/DepositModal";
 import { TokenSelectorModal } from "./components/TokenSelectorModal";
 import { OpportunitiesList } from "./components/OpportunitiesList";
 import { Button } from "@/components/ui/button";
-import { TokenType, Vault } from "@/lib/types";
+import { TokenInfo, TokenType, Vault } from "@/lib/types";
 import { fetchTokenInfos, mergeTokenInfos } from "@/lib/fetchTokenInfos";
 import { useAccount, useConfig } from "wagmi";
 import { Badge } from "@/components/ui/badge";
@@ -59,8 +59,8 @@ export default function OpportunitiesPage() {
   useEffect(() => { setHasMounted(true); }, []);
   const clientConnected = hasMounted && isConnected;
 
-  const [tokenInfos, setTokenInfos] = useState<any[]>([]); // TODO: type fetchTokenInfos return value
-  const [vaultTokenInfos, setVaultTokenInfos] = useState<any[]>([]); // TODO: type fetchTokenInfos return value
+  const [tokenInfos, setTokenInfos] = useState<TokenInfo[]>([]);
+  const [vaultTokenInfos, setVaultTokenInfos] = useState<TokenInfo[]>([]);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [selectedTab, setSelectedTab] = useState<"available" | "deposited" | "account">(
     "available"
@@ -389,19 +389,19 @@ export default function OpportunitiesPage() {
                         <Button
                           className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
                           onClick={() => {
-                            const token0 = depositTokens[0];
+                            const token0 = depositTokens[0] as TokenType | undefined;
                             if (token0) {
                               // Prefer wrapped ERC-20 address (e.g. WCBTC) over
                               // native address (zeroAddress for CBTC)
                               openSupply({
                                 address:
-                                  (token0 as any).wrapped?.address ??
-                                  (token0 as any).wrappedAddress ??
+                                  token0.wrapped?.address ??
+                                  token0.wrappedAddress ??
                                   token0.address,
                                 symbol:
-                                  (token0 as any).wrapped?.symbol ?? token0.symbol,
+                                  token0.wrapped?.symbol ?? token0.symbol,
                                 decimals:
-                                  (token0 as any).wrapped?.decimals ?? token0.decimals,
+                                  token0.wrapped?.decimals ?? token0.decimals,
                               });
                             }
                           }}

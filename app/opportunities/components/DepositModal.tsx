@@ -214,7 +214,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             context: 'deposit',
           })
           writeAllowance(parsedAmount);
-        } catch (err: any) {
+        } catch {
           toast.dismissAll();
           toast.error("User rejected the approval transaction.");
           trackApprovalResult('error', { reason: 'rejected', context: 'deposit' })
@@ -235,6 +235,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
           tellerAddress: vaultAddresses.tellerAddress,
         })
         if (depositTokenAddress === zeroAddress) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi type doesn't infer `value` from JSON ABI payable mutability
           depositResult = writeDeposit({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
@@ -250,19 +251,18 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             args: [depositTokenAddress, parsedAmount, 1],
           });
         }
-        //if (depositHash) setTxHash(depositHash);
         setTxStatus("loading");
         setTxModalOpen(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setTxStatus("error");
         setTxModalOpen(true);
-        trackDepositFailed({ reason: err?.message, tokenSymbol: selectedToken.symbol, amount: String(parsedAmount) })
+        trackDepositFailed({ reason: err instanceof Error ? err.message : String(err), tokenSymbol: selectedToken.symbol, amount: String(parsedAmount) })
         return;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTxStatus("error");
       setTxModalOpen(true);
-      trackDepositFailed({ reason: err?.message, tokenSymbol: selectedToken.symbol, amount: String(parsedAmount) })
+      trackDepositFailed({ reason: err instanceof Error ? err.message : String(err), tokenSymbol: selectedToken.symbol, amount: String(parsedAmount) })
     }
   };
 
@@ -279,7 +279,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     } else if (isDepositError || depositError) {
       setTxStatus("error");
       setTxModalOpen(true);
-      trackDepositFailed({ reason: (depositError as any)?.message, tokenSymbol: selectedToken.symbol, amountWei: String(parsedAmount), amount, amountUSD: formattedUSDAmount })
+      trackDepositFailed({ reason: depositError?.message, tokenSymbol: selectedToken.symbol, amountWei: String(parsedAmount), amount, amountUSD: formattedUSDAmount })
     }
 
     if (depositHash) {
@@ -299,7 +299,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
       trackApprovalResult('success', { context: 'deposit', token: selectedToken.symbol })
     }
     if (isAllowanceError || isAllowanceTxError) {
-      trackApprovalResult('error', { context: 'deposit', message: (isAllowanceTxError as any)?.message })
+      trackApprovalResult('error', { context: 'deposit', message: isAllowanceTxError?.message })
     }
   }, [isAllowanceSuccess, isAllowanceError, isAllowanceTxError, selectedToken.symbol])
 

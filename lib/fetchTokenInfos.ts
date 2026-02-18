@@ -4,7 +4,7 @@ import {
   getTokenPrice,
   getVaultRate,
 } from "@/lib/utils/get-token-balance";
-import { TokenType, Vault } from "./types";
+import { TokenInfo, TokenType, Vault } from "./types";
 import { VAULTS } from "./contracts/vault-registry";
 
 // address: user address, chain: wagmi/viem chain object
@@ -13,7 +13,7 @@ export async function fetchTokenInfos(
   address: `0x${string}` | undefined,
   chain: any,
   vaultsData?: Vault[]
-): Promise<any[]> {
+): Promise<TokenInfo[]> {
   const balances = await Promise.all(
     tokens.map(async (token) => {
       // Fetch real balance using getTokenBalance
@@ -67,8 +67,8 @@ export async function fetchTokenInfos(
   return balances;
 }
 
-export function mergeTokenInfos(external: any[], embedded: any[]): any[] {
-  const merged: Record<string, any> = {};
+export function mergeTokenInfos(external: TokenInfo[], embedded: TokenInfo[]): TokenInfo[] {
+  const merged: Record<string, TokenInfo> = {};
 
   for (const token of external) {
     merged[token.symbol] = { ...token };

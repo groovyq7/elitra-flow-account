@@ -93,6 +93,18 @@ export interface TokenType {
   [key: string]: unknown;
 }
 
+export interface TokenInfo {
+  symbol: string;
+  token: TokenType;
+  icon: string | null;
+  available: number;
+  availableUSD: number;
+  apy: number;
+  yearlyReward: number;
+  yearlyRewardUSD: number;
+  price: number;
+}
+
 export interface UserPnlInfo {
   pnl: string | number;
   pnlUSD: string | number;
