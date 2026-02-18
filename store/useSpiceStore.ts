@@ -111,23 +111,27 @@ export const useSpiceStore = create<SpiceState>()(
       closeAccountPopup: () => set({ isAccountPopupOpen: false }),
 
       addDeposit: (record) =>
-        set((state) => ({
-          depositHistory: [record, ...state.depositHistory].slice(
-            0,
-            MAX_HISTORY_RECORDS
-          ),
-          // Round to 6 decimal places to avoid floating-point accumulation errors
-          crossChainBalance:
-            Math.round(
-              (state.crossChainBalance +
-                parseFloat(record.usdValue || record.amount || "0")) *
-                1e6
-            ) / 1e6,
-        })),
+        set((state) => {
+          const addedValue = parseFloat(record.usdValue || record.amount || "0");
+          return {
+            depositHistory: [record, ...state.depositHistory].slice(
+              0,
+              MAX_HISTORY_RECORDS
+            ),
+            // Round to 6 decimal places to avoid floating-point accumulation errors.
+            // Guard against NaN from malformed input — treat as 0.
+            crossChainBalance:
+              Math.round(
+                (state.crossChainBalance + (isNaN(addedValue) ? 0 : addedValue)) *
+                  1e6
+              ) / 1e6,
+          };
+        }),
 
       deductBalance: (amount) =>
         set((state) => ({
-          crossChainBalance: Math.max(
+          // Guard against NaN — treat as no-op rather than corrupting balance
+          crossChainBalance: isNaN(amount) ? state.crossChainBalance : Math.max(
             0,
             Math.round((state.crossChainBalance - amount) * 1e6) / 1e6
           ),

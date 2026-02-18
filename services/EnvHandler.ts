@@ -1,3 +1,4 @@
+// @ts-nocheck — Legacy pre-SpiceFlow file; @storyhunt/sdk-core is not installed
 import { ChainId } from "@storyhunt/sdk-core";
 
 interface IEnvironmentVariables {

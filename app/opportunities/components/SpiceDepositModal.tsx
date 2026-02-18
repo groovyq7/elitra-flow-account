@@ -74,7 +74,6 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
 
       if (sourcePrice.price && destPrice.price && destPrice.price > 0) {
         const rate = sourcePrice.price / destPrice.price;
-        console.log(`[SpiceDeposit] Conversion Rate ${asset.symbol} -> WBTC: ${rate}`);
         setConversionRate(rate);
       }
     };
@@ -102,7 +101,6 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
       // Convert result to 18 decimals (WCBTC decimals)
       const wcbtcAmountStr = wcbtcAmountNum.toFixed(18);
       const tokenAmount = parseUnits(wcbtcAmountStr, 18);
-      console.log(`[SpiceDeposit] Converted ${amountStr} ${depositInputHook.selectedAsset?.symbol} -> ${wcbtcAmountStr} WCBTC`);
       return tokenAmount > 0n ? tokenAmount : null;
     }
 
@@ -146,14 +144,12 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
   ]);
 
 
-  // Reset state when modal closes
+  // Reset state when modal opens to ensure clean state on every open.
+  // Previously a delayed reset on close, which races with rapid close→reopen.
   useEffect(() => {
-    if (!open) {
-      const timer = setTimeout(() => {
-        setStep("chain-select");
-        setSelectedChainId(null);
-      }, 200);
-      return () => clearTimeout(timer);
+    if (open) {
+      setStep("chain-select");
+      setSelectedChainId(null);
     }
   }, [open]);
 
@@ -170,7 +166,6 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
   // Handle cross-chain escrow deposit completion - transition to vault deposit
   // Auto-populate from sessionStorage with original deposit details (e.g. USDC)
   const handleCrossChainComplete = useCallback(() => {
-    console.log("Cross-chain escrow deposit complete, transitioning to vault deposit via 7702");
 
     // Auto-populate from sessionStorage with original deposit details
     try {
@@ -184,7 +179,6 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
           decimals?: number;
         };
 
-        console.log("[SpiceDeposit] Auto-populating from session:", parsed);
 
         // Normalize native token addresses to zero address (as used in spiceAssets)
         let normalizedAddress = parsed.address;
@@ -268,7 +262,6 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
         depositInputHook={depositInputHook}
         submitButtonText="Complete Deposit"
         onDepositSuccess={(intentId: string) => {
-          console.log("Vault deposit successful:", intentId);
 
           // Dispatch event to trigger vault share balance refresh
           window.dispatchEvent(new CustomEvent('vault-deposit-complete', {

@@ -19,7 +19,6 @@ export class TokenLogoService {
     try {
       const cacheTokenLogoRes = await fetch("/api/token-logo")
       const cacheTokenLogo = await cacheTokenLogoRes.json()
-      console.log("cacheTokenLogo", cacheTokenLogo);
 
       // Ensure the structure of tokenLogoCache is correct
       this.tokenLogoCache = Object.keys(cacheTokenLogo).reduce((acc, key) => {

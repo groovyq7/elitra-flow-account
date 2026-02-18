@@ -220,11 +220,6 @@ export default function OpportunitiesPage() {
         embeddedVaultData
       );
 
-      console.log(
-        "Fetched combined vault token infos",
-        combinedVaultTokenInfoData
-      );
-
       if (!cancelled) {
         setTokenInfos(combinedTokenInfoData);
         setVaultTokenInfos(combinedVaultTokenInfoData);
@@ -281,7 +276,6 @@ export default function OpportunitiesPage() {
     // Run when user comes back to the tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        console.log("Tab is visible - refreshing token infos");
         getTokenInfos();
       }
     };

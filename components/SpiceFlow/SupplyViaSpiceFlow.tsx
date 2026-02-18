@@ -106,9 +106,14 @@ export const SupplyViaSpiceFlow: React.FC = () => {
   const handleSupply = useCallback(async () => {
     if (!supplyAsset || !amount || step !== "idle") return;
 
+    // Immediately transition away from "idle" to prevent double-click race
+    // (two clicks can both read step==="idle" before React re-renders)
+    setStep("building");
+
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       setError("Please enter a valid amount greater than 0.");
+      setStep("idle");
       return;
     }
 
@@ -116,6 +121,7 @@ export const SupplyViaSpiceFlow: React.FC = () => {
     // This is a soft check — the actual token balance on-chain is the real constraint
     if (crossChainBalance <= 0) {
       setError("No balance in your Elitra Account. Deposit funds first.");
+      setStep("idle");
       return;
     }
 
@@ -123,6 +129,7 @@ export const SupplyViaSpiceFlow: React.FC = () => {
     const addresses = getAddresses(NATIVE_CHAIN_ID, supplyAsset.symbol);
     if (!addresses) {
       setError(`No vault found for ${supplyAsset.symbol} on chain ${NATIVE_CHAIN_ID}.`);
+      setStep("idle");
       return;
     }
 

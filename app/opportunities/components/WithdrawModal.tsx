@@ -178,12 +178,6 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
 
       let withdrawResult;
       try {
-        console.log("Initiating withdraw...", {
-          tellerAddress: vaultAddresses.tellerAddress,
-          tokenAddress: withdrawToken?.token0.address,
-          parsedAmount,
-          userAddress: address,
-        });
         trackWithdrawAttempt({
           tokenSymbol: selectedToken.symbol,
           tokenAddress: selectedToken.address,

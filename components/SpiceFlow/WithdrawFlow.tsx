@@ -79,14 +79,14 @@ export const WithdrawFlow: React.FC = () => {
   // Determine underlying token address from selected vault token
   const tokenAddress = UNDERLYING_TOKEN_MAP[selectedToken];
 
-  // Reset state when modal closes
+  // Reset state when modal opens to ensure clean state on every open.
+  // Previously this was a delayed reset on close, which created a race condition:
+  // close → 200ms timer → reopen before timer fires → timer resets fresh state.
+  // Now we reset synchronously on open for a guaranteed clean state.
   useEffect(() => {
-    if (!isWithdrawOpen) {
-      const timer = setTimeout(() => {
-        setStep("chain-select");
-        setSelectedChainId(null);
-      }, 200);
-      return () => clearTimeout(timer);
+    if (isWithdrawOpen) {
+      setStep("chain-select");
+      setSelectedChainId(null);
     }
   }, [isWithdrawOpen]);
 

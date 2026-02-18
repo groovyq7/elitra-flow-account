@@ -62,7 +62,6 @@ export function AvailableAssetsTable({
 
   useEffect(() => {
     const handleBalanceChange = () => {
-      console.log("REFETCHING BALANCE...")
       setTimeout(() => {
         refetch?.();
       }, 500);

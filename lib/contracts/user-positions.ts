@@ -41,7 +41,6 @@ function toBigIntSafe(v: any): bigint {
 }
 
 export async function getUserVaultPositionFromSubgraph(userId: string, vaultId: string) {
-  console.log("Fetching user vault position from subgraph:", userId, vaultId);
   if (!userId || !vaultId) {
     return { data: null, error: new Error("Invalid userId or vaultId"), cached: false };
   }

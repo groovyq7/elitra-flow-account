@@ -98,7 +98,6 @@ export class ErrorHandler {
       error?.cause?.details ||
       error?.message;
 
-      console.log("contract error : ",error);
     if (!errorMessage) return null
 
     // Check through defined contract errors.
@@ -179,7 +178,7 @@ export class ErrorHandler {
       error?.details ||
       error?.cause?.details ||
       error?.message
-    if (errorMessage?.includes("slippage") || errorMessage.toLowerCase().includes("too little received")) {
+    if (errorMessage?.includes("slippage") || errorMessage?.toLowerCase().includes("too little received")) {
       return "Price movement too high, increase slippage tolerance"
     }
 

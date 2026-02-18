@@ -279,7 +279,6 @@ export async function getVaultsByChainWithSubgraph(
             const fetchApyData = await fetch(
               `/api/apy?vaultId=${wrappedAddress}`
             );
-            console.log("fetchApyData", fetchApyData);
             if (fetchApyData.ok) {
               const apyJson = await fetchApyData.json();
               if (typeof apyJson.averageApy === "number") {
@@ -386,7 +385,6 @@ export async function getVaultByIdWithSubgraph(
         const fetchApyData = await fetch(
           `/api/apy?vaultId=${wrappedAddress}`
         );
-        console.log("fetchApyData", fetchApyData);
         if (fetchApyData.ok) {
           const apyJson = await fetchApyData.json();
           if (typeof apyJson.averageApy === "number") {

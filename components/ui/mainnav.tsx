@@ -91,16 +91,6 @@ export default function MainNav() {
             const supply = await getTokenSupply(vault.id || "", chain);
             const rate = await getVaultRate(vault.symbol, chain);
             const price = await getTokenPrice(vault.token0?.symbol || "");
-            console.log(
-              "Vault:",
-              vault.name,
-              "Supply:",
-              supply.formatted,
-              "Rate:",
-              rate.rate,
-              "Price:",
-              price.price
-            );
             const tvl =
               Number(supply.formatted) *
               Number(rate.rate) *
@@ -113,10 +103,9 @@ export default function MainNav() {
             };
           })
         );
-        console.log(_vaultData);
         if (!cancelled) setVaultData(_vaultData);
       } catch (e) {
-        if (!cancelled) console.log("Error fetching vaults TVL", e);
+        // Error silently ignored (TVL fetch is best-effort)
       } finally {
         if (!cancelled) setIsTvlLoading(false);
       }

@@ -44,14 +44,30 @@ class SdkErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[SdkErrorBoundary] SDK component crashed:", error, info.componentStack);
+    // Clear any existing timer before starting a new one (prevents leaking timers
+    // if a second error fires while the first 5-second timer is still running)
+    if (this.resetTimer) clearTimeout(this.resetTimer);
     // Auto-reset after 5 seconds so the user can retry
     this.resetTimer = setTimeout(() => {
       this.setState({ hasError: false });
     }, 5000);
   }
 
+  componentDidUpdate(_prevProps: { children: React.ReactNode }, prevState: { hasError: boolean }) {
+    // When hasError resets (timer or props change), clear the timer
+    if (prevState.hasError && !this.state.hasError) {
+      if (this.resetTimer) {
+        clearTimeout(this.resetTimer);
+        this.resetTimer = null;
+      }
+    }
+  }
+
   componentWillUnmount() {
-    if (this.resetTimer) clearTimeout(this.resetTimer);
+    if (this.resetTimer) {
+      clearTimeout(this.resetTimer);
+      this.resetTimer = null;
+    }
   }
 
   render() {

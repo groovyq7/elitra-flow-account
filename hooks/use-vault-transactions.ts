@@ -39,7 +39,6 @@ export function useBalance(tokenAddress: string) {
 
 export function useTotalSupply(tokenAddress: string) {
   // Read total supply of the vault share token
-  console.log("useTotalSupply for", tokenAddress);
   const { data: totalSupply } = useReadContract({
     address: tokenAddress as `0x${string}`,
     abi: erc20Abi,

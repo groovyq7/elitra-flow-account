@@ -43,7 +43,6 @@ export function computeApy24hLinear(
   // clamp extremes
   if (apyScaled > MAX_ABS) apyScaled = MAX_ABS;
   if (apyScaled < -MAX_ABS) apyScaled = -MAX_ABS;
-  console.log("Computed APY 24h linear:", formatUnits(apyScaled, 18), "dt:", dt);
 
   return {
     apyScaled,
@@ -75,7 +74,6 @@ export function computeApy24hLinearCurrentDenom(
   // clamp extremes
   if (apyScaled > MAX_ABS) apyScaled = MAX_ABS;
   if (apyScaled < -MAX_ABS) apyScaled = -MAX_ABS;
-  console.log("Computed APY 24h linear (current denom):", formatUnits(apyScaled, 18), "dt:", dt);
 
   return {
     apyScaled,

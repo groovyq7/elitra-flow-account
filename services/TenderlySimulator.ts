@@ -1,3 +1,4 @@
+// @ts-nocheck — Legacy pre-SpiceFlow file; @storyhunt/sdk-core is not installed
 import { ChainId } from "@storyhunt/sdk-core"
 import axios, { AxiosRequestConfig } from "axios"
 import http from "http"
@@ -149,7 +150,6 @@ export class TenderlySimulator {
     this.overrideEstimateMultiplier =
       overrideEstimateMultiplier ?? DEFAULT_ESTIMATE_MULTIPLIER
     this.tenderlyRequestTimeout = tenderlyRequestTimeout ?? DEFAULT_ESTIMATE_TIMEOUT
-    console.log("TenderlySimulator initialized");
   }
 
   static getInstance(
@@ -198,7 +198,6 @@ export class TenderlySimulator {
                 this.tenderlyProject,
               )
 
-      const before = Date.now()
 
       const { data: response } =
         await this.tenderlyServiceInstance.post<TenderlyResponse>(
@@ -207,11 +206,6 @@ export class TenderlySimulator {
           opts,
         )
 
-      const latencies = Date.now() - before
-      console.log(
-        `Tenderly simulation request body: ${JSON.stringify(body)}, having latencies ${latencies} in milliseconds.`,
-      )
-      console.log("Tenderly simulation response:", response)
 
       // Validate tenderly response body
       if (
@@ -220,10 +214,6 @@ export class TenderlySimulator {
         !response.simulation_results[0].transaction ||
         response.simulation_results[0].transaction.error_message
       ) {
-        console.log(
-          `Failed to Simulate Via Tenderly!`,
-          response.simulation_results[0].transaction.error_message,
-        )
         return { simulationStatus: SimulationStatus.Failed }
       }
 
@@ -240,7 +230,6 @@ export class TenderlySimulator {
         simulationStatus: SimulationStatus.Succeeded,
       }
     } catch (error: any) {
-      console.log(`Error when Simulating Via Tenderly!`, error)
       return {
         simulationStatus: SimulationStatus.Failed,
         error: breakDownTenderlySimulationError(error.message),

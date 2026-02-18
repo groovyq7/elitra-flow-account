@@ -23,7 +23,6 @@ export async function GET(req: Request) {
     const takaraUrl = vaultId ? `${origin}${TAKARA_API}?vaultId=${vaultId}` : `${origin}${TAKARA_API}`;
     const yeiUrl = vaultId ? `${origin}${YEI_API}?vaultId=${vaultId}` : `${origin}${YEI_API}`;
 
-    console.log("Fetching APY data from:", { takaraUrl, yeiUrl });
 
     let takaraData, yeiData;
     let takaraError, yeiError;

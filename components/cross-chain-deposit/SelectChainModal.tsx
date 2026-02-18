@@ -24,7 +24,6 @@ export const SelectChainModal: React.FC<SelectChainModalProps> = ({
 }) => {
   const handleChainSelect = (chainIdStr: string) => {
     const chainId = parseInt(chainIdStr, 10);
-    console.log('Chain selected from library:', chainId);
     onChainSelect?.(chainId);
   };
 

@@ -69,7 +69,8 @@ export function useAllowance(selectedTokenAddressIn: string, spender: string) {
         reset()
       }, 5000)
     }
-  }, [error, isConfirming, isPending, isSuccess, receipt, refetch, reset, txError, toast])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- toast is a module-level function, not reactive
+  }, [error, isConfirming, isPending, isSuccess, receipt, refetch, reset, txError])
 
   return {
     allowanceAmount,

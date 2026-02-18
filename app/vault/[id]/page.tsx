@@ -95,13 +95,18 @@ export default function VaultDetailsPage() {
   }
 
   const [userPositionPnlInfo, setUserPositionPnlInfo] = useState<UserPnlInfo>();
+  // Bump counter to force PnL re-fetch on deposit/withdraw events
+  const [pnlRefreshKey, setPnlRefreshKey] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function getUserPnl() {
       if (!isConnected || !vault || !vault?.id) return;
 
       const rateData = await getVaultRate(vault?.symbol, vaultChain);
       const price = await getTokenPrice(vault?.token0.symbol);
+      if (cancelled) return;
 
       // Fetch for external wallet
       let externalPnl = { pnl: 0, pnlUSD: 0, deposited: 0, depositedUSD: 0, underlyingValue: 0, underlyingValueUSD: 0 };
@@ -110,6 +115,7 @@ export default function VaultDetailsPage() {
 
       if (address) {
         const { data } = await getUserVaultPositionFromSubgraph(address.toLowerCase(), vault?.id);
+        if (cancelled) return;
         const userPnlData = computePositionPnL({
           shareBalance: data?.currentShareBalance || BigInt(0),
           costBasis: data?.costBasis || BigInt(0),
@@ -126,7 +132,9 @@ export default function VaultDetailsPage() {
           underlyingValueUSD: Number(userPnlData.underlyingValue) * price.price,
         };
         externalBalance = await getTokenBalance(vault.token0.address, address, vaultChain);
+        if (cancelled) return;
         const externalShareBalanceData = await getTokenBalance(vault.id, address, vaultChain);
+        if (cancelled) return;
         externalShareBalance = { formatted: Number(externalShareBalanceData.formatted) };
       }
 
@@ -136,6 +144,7 @@ export default function VaultDetailsPage() {
 
       if (embeddedWalletAddress) {
         const { data } = await getUserVaultPositionFromSubgraph(embeddedWalletAddress.toLowerCase(), vault?.id);
+        if (cancelled) return;
         const userPnlData = computePositionPnL({
           shareBalance: data?.currentShareBalance || BigInt(0),
           costBasis: data?.costBasis || BigInt(0),
@@ -152,17 +161,12 @@ export default function VaultDetailsPage() {
           underlyingValueUSD: Number(userPnlData.underlyingValue) * price.price,
         };
         embeddedBalance = await getTokenBalance(vault.token0.address, embeddedWalletAddress as `0x${string}`, vaultChain);
+        if (cancelled) return;
         const embeddedShareBalanceData = await getTokenBalance(vault.id, embeddedWalletAddress as `0x${string}`, vaultChain);
+        if (cancelled) return;
 
         embeddedShareBalance = { formatted: Number(embeddedShareBalanceData.formatted) };
       }
-
-      console.log("External PnL:", externalPnl);
-      console.log("Embedded PnL:", embeddedPnl);
-      console.log("External Balance:", externalBalance);
-      console.log("Embedded Balance:", embeddedBalance);
-      console.log("External Share Balance:", externalShareBalance);
-      console.log("Embedded Share Balance:", embeddedShareBalance);
 
       const combinedPnl = {
         pnl: externalPnl.pnl + embeddedPnl.pnl,
@@ -173,25 +177,25 @@ export default function VaultDetailsPage() {
         underlyingValueUSD: externalPnl.underlyingValueUSD + embeddedPnl.underlyingValueUSD,
       };
 
-      setUserBalance({ formatted: Number(externalBalance.formatted) + Number(embeddedBalance.formatted) });
-      setUserShareBalance({ formatted: Number(externalShareBalance.formatted) + Number(embeddedShareBalance.formatted) });
-      setUserPositionPnlInfo(combinedPnl);
-      setTokenPrice(price.price);
-      setTokenRate(Number(rateData.rate));
+      if (!cancelled) {
+        setUserBalance({ formatted: Number(externalBalance.formatted) + Number(embeddedBalance.formatted) });
+        setUserShareBalance({ formatted: Number(externalShareBalance.formatted) + Number(embeddedShareBalance.formatted) });
+        setUserPositionPnlInfo(combinedPnl);
+        setTokenPrice(price.price);
+        setTokenRate(Number(rateData.rate));
+      }
     }
     getUserPnl();
-  // Note: isModalOpen was removed from deps — it's dead state (never toggled by
-  // the SpiceFlow modal flow). Refreshes are triggered by the custom events below.
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, embeddedWalletAddress, vault?.id]);
+  }, [isConnected, address, embeddedWalletAddress, vault?.id, pnlRefreshKey]);
 
   // Refresh PnL after a successful deposit or withdraw via the SpiceFlow modals
   useEffect(() => {
     const refresh = () => {
-      // Re-trigger the getUserPnl effect by bumping a dependency isn't possible here,
-      // so we simply re-call it directly via the same outer effect logic.
-      // The simple approach: dispatch a no-op state update to force re-render.
-      setUserShareBalance((prev: { formatted: number } | undefined) => prev ? { ...prev } : undefined);
+      // Bump pnlRefreshKey to re-trigger the getUserPnl effect above.
+      // A simple state clone wouldn't work because the effect deps wouldn't change.
+      setPnlRefreshKey((k) => k + 1);
     };
     window.addEventListener("vault-deposit-complete", refresh);
     window.addEventListener("crosschain-withdraw-complete", refresh);
@@ -208,15 +212,16 @@ export default function VaultDetailsPage() {
 
   useEffect(() => {
     if (!vault) return;
+    let cancelled = false;
 
     async function getVaultInfo() {
       if (!vault) return;
       const _vaultInfo = await getVaultByIdWithSubgraph(vault.id, vaultChain.id);
-      setVaultData(_vaultInfo);
-      console.log("Vault info fetched:", _vaultInfo);
+      if (!cancelled) setVaultData(_vaultInfo);
     }
     getVaultInfo();
-  }, [vault]);
+    return () => { cancelled = true; };
+  }, [vault, vaultChain.id]);
 
   if (vaultLoading) {
     return <VaultDetailsSkeleton />;
@@ -231,7 +236,6 @@ export default function VaultDetailsPage() {
           </h1>
           <p className="text-muted-foreground mb-4">
             The requested vault could not be found.
-            {void console.error("Vault not found for ID:", vaultId, "isLoading:", vaultLoading)}
           </p>
           <Button asChild>
             <Link href="/">Back to Home</Link>

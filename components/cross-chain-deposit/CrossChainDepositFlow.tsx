@@ -50,7 +50,6 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
 
   const handleChainSelect = useCallback(
     (chainId: number | undefined) => {
-      console.log("Chain selected:", chainId);
       chainSelectedRef.current = true;
       setSelectedChainId(chainId as SupportedChainId | undefined);
       setCurrentStep("provider-login");
@@ -62,7 +61,6 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   );
 
   const handleClose = useCallback(async () => {
-    console.log("Closing SpiceFlow");
     loginTriggeredRef.current = false;
     completedRef.current = false;
     setIsLoginInProgress(false);
@@ -76,35 +74,36 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
     onClose();
   }, [onClose, switchChainAsync]);
 
-  const handleSelectChainClose = useCallback(async () => {
-    // Add a small delay to allow chain selection callback to set the ref first
-    await new Promise(resolve => setTimeout(resolve, 50));
-    if (chainSelectedRef.current) {
-      chainSelectedRef.current = false;
-      return;
-    }
-    handleClose();
+  const handleSelectChainClose = useCallback(() => {
+    // Use a microtask instead of a 50ms setTimeout to avoid the race condition.
+    // onChainSelect fires synchronously before onClose, but we use queueMicrotask
+    // to let the synchronous chain-selection callback complete first.
+    queueMicrotask(() => {
+      if (chainSelectedRef.current) {
+        chainSelectedRef.current = false;
+        return;
+      }
+      handleClose();
+    });
   }, [handleClose]);
 
   const handleDepositComplete = useCallback(() => {
-    console.log("Deposit complete, calling onComplete to transition to vault deposit");
     completedRef.current = true;
     if (onComplete && selectedChainId) {
       onComplete(selectedChainId);
     }
   }, [onComplete, selectedChainId]);
 
-  // Reset state when modal closes
+  // Reset state when modal opens to ensure clean state on every open.
+  // Previously a 300ms delayed reset on close, which races with rapid close→reopen.
   useEffect(() => {
-    if (!isOpen) {
-      const timer = setTimeout(() => {
-        setCurrentStep(initialChainId ? "provider-login" : "select-chain");
-        setSelectedChainId(initialChainId as SupportedChainId | undefined);
-        loginTriggeredRef.current = false;
-        completedRef.current = false;
-        setIsLoginInProgress(false);
-      }, 300);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      setCurrentStep(initialChainId ? "provider-login" : "select-chain");
+      setSelectedChainId(initialChainId as SupportedChainId | undefined);
+      loginTriggeredRef.current = false;
+      completedRef.current = false;
+      setIsLoginInProgress(false);
+      return;
     }
   }, [isOpen, initialChainId]);
 
@@ -119,17 +118,12 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
     ) {
       if (authenticated && embeddedWalletAddress) {
         // Already have everything, move to airdrop step
-        console.log(
-          "Already authenticated with wallet, moving to airdrop step"
-        );
         setCurrentStep("airdrop");
       } else if (authenticated && !embeddedWalletAddress) {
         // Authenticated but wallet still loading - just wait
-        console.log("Authenticated, getting your embedded wallet ready...");
         // Don't trigger login again, don't close - just wait
       } else if (!authenticated && !loginTriggeredRef.current) {
         // Not authenticated, trigger login
-        console.log("Not authenticated, triggering login");
         loginTriggeredRef.current = true;
         setIsLoginInProgress(true);
         login();
@@ -146,7 +140,6 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
       embeddedWalletAddress &&
       !completedRef.current
     ) {
-      console.log("Authentication completed, moving to airdrop step");
       setIsLoginInProgress(false);
       const timer = setTimeout(() => {
         setCurrentStep("airdrop");
@@ -179,7 +172,6 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   // Reset login progress state when authentication status changes
   useEffect(() => {
     if (authenticated && isLoginInProgress) {
-      console.log("User authenticated, resetting login progress state");
       setIsLoginInProgress(false);
     }
   }, [authenticated, isLoginInProgress]);
@@ -187,7 +179,6 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   // Auto-skip airdrop for Citrea chain
   useEffect(() => {
     if (currentStep === "airdrop" && selectedChainId === 5115) {
-      console.log("Citrea chain selected, skipping airdrop step");
       setCurrentStep("deposit");
     }
   }, [currentStep, selectedChainId]);

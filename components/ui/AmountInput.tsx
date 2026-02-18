@@ -93,13 +93,6 @@ export const AmountInput: React.FC<AmountInputProps> = ({
         );
         const ratio = await getVaultRate(selectedToken.symbol, chain);
         const adjustedPrice = price.price * Number(ratio.rate);
-        console.log("Original price for :", selectedToken.symbol, price.price);
-        console.log("rate for :", selectedToken.symbol, ratio.rate);
-        console.log(
-          "Adjusted price for :",
-          selectedToken.symbol,
-          adjustedPrice
-        );
         setTokenPrice(adjustedPrice);
       } else {
         const price = await getTokenPrice(selectedToken.symbol);

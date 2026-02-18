@@ -65,8 +65,10 @@ export const DepositFlow: React.FC = () => {
 
   // Lazy-load SpiceDeposit from the SDK at runtime
   useEffect(() => {
+    let cancelled = false;
     import("@spicenet-io/spiceflow-ui")
       .then((sdk) => {
+        if (cancelled) return;
         const Comp =
           (sdk as { SpiceDeposit?: React.ComponentType<SdkDepositProps> }).SpiceDeposit ??
           ((sdk as { default?: { SpiceDeposit?: React.ComponentType<SdkDepositProps> } }).default?.SpiceDeposit) ??
@@ -74,8 +76,19 @@ export const DepositFlow: React.FC = () => {
         if (Comp) setSdkDeposit(() => Comp);
       })
       .catch((err) => {
-        console.error("[DepositFlow] Failed to load SpiceFlow SDK:", err);
+        if (!cancelled) console.error("[DepositFlow] Failed to load SpiceFlow SDK:", err);
       });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Cleanup auto-close timer on unmount (wallet disconnect, etc.)
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+    };
   }, []);
 
   // ESC key to close
@@ -95,7 +108,6 @@ export const DepositFlow: React.FC = () => {
     const markSuccess = (source: string) => {
       if (depositSucceededRef.current) return;
       depositSucceededRef.current = true;
-      console.log("[DepositFlow] Deposit success detected via:", source);
 
       const amount = lastDepositAmountRef.current;
       if (amount && parseFloat(amount) > 0) {

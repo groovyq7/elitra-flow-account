@@ -69,15 +69,18 @@ export const CrossChainAccountPopup: React.FC = () => {
   const hasDeposits = depositHistory.length > 0;
 
   const handleDeposit = () => {
-    // Open deposit first, then close popup on next tick to avoid
-    // the popup unmounting before the click event completes
+    // Open deposit first, then close popup synchronously.
+    // The original setTimeout(0) could fire after unmount if the component
+    // tree changes before the microtask runs. Since openDeposit() and
+    // closeAccountPopup() are both synchronous Zustand actions, batching
+    // them in the same tick is safe — React 18 batches them automatically.
     openDeposit();
-    setTimeout(() => closeAccountPopup(), 0);
+    closeAccountPopup();
   };
 
   const handleWithdraw = () => {
     openWithdraw();
-    setTimeout(() => closeAccountPopup(), 0);
+    closeAccountPopup();
   };
 
   return (

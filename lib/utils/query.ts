@@ -83,7 +83,6 @@ export async function fetchQuery(
   entry.abortController = abortController
 
   try {
-    console.log({shouldUseGraphOnClient});
     
     let gqlResult: any
     if (shouldUseGraphOnClient) {

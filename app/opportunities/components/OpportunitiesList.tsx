@@ -40,26 +40,13 @@ export const OpportunitiesList: React.FC<OpportunitiesListProps> = ({
   >([]);
 
   useEffect(() => {
+    let cancelled = false;
     async function getVaultsTVL() {
       const _vaultData = await Promise.all(
         availableVaults.map(async (vault) => {
-          const tokenAddress =
-            vault.token0?.address === zeroAddress
-              ? vault.token0?.wrapped?.address
-              : vault.token0?.address;
           const supply = await getTokenSupply(vault.id || "", chain);
           const rate = await getVaultRate(vault.symbol, chain);
           const price = await getTokenPrice(vault.token0?.symbol || "");
-          console.log(
-            "Vault:",
-            vault.name,
-            "Supply:",
-            supply.formatted,
-            "Rate:",
-            rate.rate,
-            "Price:",
-            price.price
-          );
           const tvl =
             Number(supply.formatted) * Number(rate.rate) * Number(price.price);
           return {
@@ -70,11 +57,11 @@ export const OpportunitiesList: React.FC<OpportunitiesListProps> = ({
           };
         })
       );
-      console.log(_vaultData);
-      setVaultData(_vaultData);
+      if (!cancelled) setVaultData(_vaultData);
     }
     getVaultsTVL();
-  }, [availableVaults]);
+    return () => { cancelled = true; };
+  }, [availableVaults, chain]);
 
   return (
     <div className="space-y-6">

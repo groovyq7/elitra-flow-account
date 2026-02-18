@@ -20,7 +20,6 @@ export const getTokenBalance = async (
   address: `0x${string}` | undefined,
   chain: Chain
 ) => {
-  console.log("Getting token balance...", token, address);
   try {
     const publicClient = createPublicClient({
       chain,
@@ -54,17 +53,14 @@ export const getTokenBalance = async (
 
     //formatted
     const formatted = formatUnits(balance, decimals);
-    console.log("balance fetched", { balance, formatted, decimals });
 
     return { balance, decimals, formatted };
   } catch (error) {
-    console.log("Error fetching token balance", error);
     return { balance: BigInt(0), decimals: 18, formatted: "0", error: true };
   }
 };
 
 export const getTokenSupply = async (token: string, chain: Chain) => {
-  console.log("Getting token balance...", token);
   try {
     const publicClient = createPublicClient({
       chain,
@@ -84,18 +80,15 @@ export const getTokenSupply = async (token: string, chain: Chain) => {
       }) as Promise<number>,
     ]);
 
-    console.log("total supply fetched", { totalSupply });
     const formatted = formatUnits(totalSupply, decimals);
 
     return { totalSupply, formatted };
   } catch (error) {
-    console.log("Error fetching token total supply", error);
     return { totalSupply: BigInt(0), error: true };
   }
 };
 
 export const getVaultRate = async (symbol: string, chain: Chain) => {
-  console.log("Getting vault rate...", symbol);
   const accountantAddress = getAddresses(chain.id, symbol)?.accountantAddress; // Assuming vaultAddress is the accountant address
   try {
     const cacheKey = `${chain.id}:${accountantAddress}`;
@@ -119,12 +112,10 @@ export const getVaultRate = async (symbol: string, chain: Chain) => {
       }) as Promise<bigint>,
     ]);
 
-    console.log("vault rate fetched", { rate });
     const formatted = formatUnits(rate, 18);
     rateCache[cacheKey] = { rateRaw: rate, timestamp: Date.now() };
     return { rate: formatted, rateRaw: rate, cached: false };
   } catch (error) {
-    console.log("Error fetching token vault rate", error);
     // Attempt stale cache fallback
     const accountantAddress = getAddresses(chain.id, symbol)?.accountantAddress;
     const cacheKey = `${chain.id}:${accountantAddress}`;
@@ -151,7 +142,6 @@ export const getTokenPrice = async (token: string) => {
     return { price: 1, error: false, cached: true };
   }
   
-  console.log("Getting token price...", token);
   //Basic symbol to CoinGecko id mapping (expand as needed)
   const symbolToCoingeckoId: Record<string, string> = {
     ETH: "ethereum",
@@ -186,7 +176,6 @@ export const getTokenPrice = async (token: string) => {
     if (cgRes.ok) {
       const cgData = await cgRes.json();
       const price = cgData[coingeckoId]?.usd;
-      console.log("CoinGecko price fetched", price);
       if (typeof price === "number") {
         priceCache[cacheKey] = { price, timestamp: Date.now() };
         return { price, error: false, cached: false };
@@ -194,7 +183,6 @@ export const getTokenPrice = async (token: string) => {
     }
     throw new Error("CoinGecko price not found");
   } catch (cgError) {
-    console.log("CoinGecko failed, trying Coinbase", cgError);
     // Fallback: Coinbase
     try {
       // Coinbase uses symbol-USD, e.g. ETH-USD
@@ -204,7 +192,6 @@ export const getTokenPrice = async (token: string) => {
       if (cbRes.ok) {
         const cbData = await cbRes.json();
         const price = parseFloat(cbData?.data?.amount);
-        console.log("Coinbase price fetched", price);
         if (!isNaN(price)) {
           priceCache[cacheKey] = { price, timestamp: Date.now() };
           return { price, error: false, cached: false };
@@ -212,7 +199,6 @@ export const getTokenPrice = async (token: string) => {
       }
       throw new Error("Coinbase price not found");
     } catch (cbError) {
-      console.log("Coinbase fallback failed", cbError);
       // Last resort: if we have a stale cache, return it despite age
       if (cached) {
         return { price: cached.price, error: true, cached: true, stale: true };

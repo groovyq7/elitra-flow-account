@@ -14,7 +14,6 @@ export async function fetchTokenInfos(
   chain: any,
   vaultsData?: Vault[]
 ): Promise<any[]> {
-  console.log("Fetching token infos for", tokens, address, chain, vaultsData);
   const balances = await Promise.all(
     tokens.map(async (token) => {
       // Fetch real balance using getTokenBalance
@@ -65,7 +64,6 @@ export async function fetchTokenInfos(
       };
     })
   );
-  console.log("Fetched token infos", balances);
   return balances;
 }
 
