@@ -14,7 +14,9 @@ import { getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
 import { UserPnlInfo } from "@/lib/types";
 import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 
+// TODO: replace `any[]` props with proper types (TokenInfo[], Vault[], TokenType)
 export function DepositedAssetsTable({
   tokenInfos,
   availableVaults,
@@ -42,14 +44,8 @@ export function DepositedAssetsTable({
   const [userPositionPnlInfo, setUserPositionPnlInfo] =
     useState<Record<string, UserPnlInfo>>();
 
-  const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem('embeddedWalletAddress');
-    if (stored) {
-      setEmbeddedWalletAddress(stored);
-    }
-  }, []);
+  // Use the SDK hook — reflects live Privy state without sessionStorage race conditions
+  const embeddedWalletAddress = useEmbeddedWalletAddress();
 
   useEffect(() => {
     async function getUserPnl() {

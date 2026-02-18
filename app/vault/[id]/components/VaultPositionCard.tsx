@@ -38,12 +38,17 @@ export function VaultPositionCard({
   const { openSupply, crossChainBalance } = useSpiceStore();
 
   const handleGaslessSupply = () => {
-    // Use the vault's underlying deposit token (wrappedAddress for native, or address for ERC20)
-    const depositAddress = vault.token0.wrappedAddress || vault.token0.address;
+    // For native tokens (e.g. CBTC), the Teller only accepts the wrapped ERC-20 version (WCBTC).
+    // Check the nested wrapped object first, then the flat wrappedAddress field, then fall back
+    // to the token address (which works for non-native ERC-20 tokens like NUSD).
+    const depositAddress =
+      vault.token0?.wrapped?.address ||
+      vault.token0?.wrappedAddress ||
+      vault.token0?.address;
     openSupply({
       address: depositAddress,
-      symbol: vault.token0.symbol,
-      decimals: vault.token0.decimals,
+      symbol: vault.token0?.wrapped?.symbol || vault.token0?.symbol,
+      decimals: vault.token0?.wrapped?.decimals ?? vault.token0?.decimals,
     });
   };
 
@@ -81,11 +86,17 @@ export function VaultPositionCard({
                 <div className="space-y-2">
                   <Input
                     id="deposit-amount"
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     style={{ height: "3rem", fontSize: "1.25rem", fontWeight: "600" }}
                     placeholder="0.0"
                     value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                        setDepositAmount(val);
+                      }
+                    }}
                     className="text-lg p-4"
                   />
                   <div className="text-xs text-muted-foreground">
@@ -102,7 +113,7 @@ export function VaultPositionCard({
                 )}
                 <Button
                   onClick={handleDeposit}
-                  disabled={!depositAmount || isApproving || isDepositing}
+                  disabled={!depositAmount || parseFloat(depositAmount) <= 0 || isNaN(parseFloat(depositAmount)) || isApproving || isDepositing}
                   className="w-full neon-button h-12 text-lg font-bold"
                 >
                   {isApproving

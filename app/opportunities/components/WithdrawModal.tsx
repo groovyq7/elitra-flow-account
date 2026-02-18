@@ -68,7 +68,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     (vault) => vault.id === selectedToken.address
   );
   const decimals = selectedToken.decimals;
-  const parsedAmount = BigInt(Math.floor(Number(amount) * 10 ** 18));
+  const parsedAmount = amount && !isNaN(Number(amount)) ? BigInt(Math.floor(Number(amount) * 10 ** 18)) : 0n;
   const [isDisabled, setIsDisabled] = useState(false);
   const selectedVault = vaults.find((v) => v.id === selectedToken.address);
 
@@ -122,10 +122,6 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         } as const;
       }
 
-      console.log("Selected vault", selectedVault);
-      console.log(" vaults", vaults);
-      console.log("Selected token", selectedToken);
-
       if (!selectedVault || !vaultRate || vaultRate === BigInt(0)) {
         return {
           estimatedAssets: BigInt(0),
@@ -142,7 +138,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       const minAmount = assetsInWei; // optionally subtract slippage buffer
       const underlyingDecimals = withdrawToken?.token0.decimals || 18;
       const assetsNumber = Number(minAmount) / 10 ** underlyingDecimals;
-      const usdAmount = assetsNumber * tokenPrice!;
+      const usdAmount = assetsNumber * (tokenPrice ?? 0);
 
       return {
         estimatedAssets: assetsInWei,
@@ -197,12 +193,16 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           chainId,
           tellerAddress: vaultAddresses.tellerAddress,
         });
+        const underlyingTokenAddress =
+          withdrawToken?.token0?.wrapped?.address ??
+          withdrawToken?.token0?.wrappedAddress ??
+          withdrawToken?.token0?.address;
         withdrawResult = writeWithdraw({
           address: vaultAddresses.tellerAddress as `0x${string}`,
           abi: TELLER_ABI,
           functionName: "bulkWithdrawNow",
           args: [
-            withdrawToken?.token0.wrapped.address,
+            underlyingTokenAddress,
             parsedAmount,
             0,
             address,
@@ -340,12 +340,12 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
                     getTokenImage(withdrawToken?.token0.symbol!) ||
                     "/placeholder.svg"
                   }
-                  alt={withdrawToken?.token0.wrapped.symbol || ""}
+                  alt={withdrawToken?.token0?.wrapped?.symbol ?? withdrawToken?.token0?.symbol ?? ""}
                   width={20}
                   height={20}
                   className="w-5 h-5 rounded-full"
                 />
-                {withdrawToken?.token0.wrapped.symbol}
+                {withdrawToken?.token0?.wrapped?.symbol ?? withdrawToken?.token0?.symbol}
               </div>
             </div>
           </div>
@@ -385,7 +385,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         }
         outputAmount={formatPrice(formattedMinAmount, 8)}
         outputAmountUSD={formatPrice(formattedUSDAmount)}
-        tokenOutputSymbol={withdrawToken?.token0.wrapped.symbol}
+        tokenOutputSymbol={withdrawToken?.token0?.wrapped?.symbol ?? withdrawToken?.token0?.symbol}
         title={
           txStatus === "loading"
             ? "Confirming Withdraw..."

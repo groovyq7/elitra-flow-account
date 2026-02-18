@@ -18,12 +18,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   useSpiceAssets,
+  useEmbeddedWalletAddress,
 } from "@spicenet-io/spiceflow-ui";
 import { getTargetAddresses } from "@/lib/utils/chains";
 import { useSpiceStore } from "@/store/useSpiceStore";
 
 const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
+// TODO: replace `any[]` props with proper types (TokenInfo[], Vault[], TokenType)
 export function AvailableAssetsTable({
   tokenInfos,
   availableVaults,
@@ -47,15 +49,9 @@ export function AvailableAssetsTable({
   useEffect(() => { setHasMounted(true); }, []);
   const clientConnected = hasMounted && isConnected;
 
-  const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string | undefined>(undefined);
+  // Use the SDK hook — reflects live Privy state without sessionStorage race conditions
+  const embeddedWalletAddress = useEmbeddedWalletAddress();
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem('embeddedWalletAddress');
-    if (stored) {
-      setEmbeddedWalletAddress(stored);
-    }
-  }, []);
 
   const { assets, loading: assetsLoading, refetch } = useSpiceAssets({
     address: embeddedWalletAddress,
@@ -223,11 +219,20 @@ export function AvailableAssetsTable({
                             <Button
                               className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
                               onClick={() => {
-                                const depositAddress = token.token.wrappedAddress || token.token.address;
+                                // Prefer wrapped ERC-20 address (e.g. WCBTC) over
+                                // native token address (zeroAddress for CBTC)
+                                const depositAddress =
+                                  token.token.wrapped?.address ??
+                                  token.token.wrappedAddress ??
+                                  token.token.address;
+                                const depositSymbol =
+                                  token.token.wrapped?.symbol ?? token.symbol;
+                                const depositDecimals =
+                                  token.token.wrapped?.decimals ?? token.token.decimals;
                                 openSupply({
                                   address: depositAddress,
-                                  symbol: token.symbol,
-                                  decimals: token.token.decimals,
+                                  symbol: depositSymbol,
+                                  decimals: depositDecimals,
                                 });
                                 trackModalOpen("gasless_supply", {
                                   source: "available_table",

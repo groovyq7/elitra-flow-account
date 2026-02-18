@@ -20,6 +20,7 @@ export const SelectChainModal: React.FC<SelectChainModalProps> = ({
   onClose,
   onChainSelect,
   supportedChains = [11155111, 421614, 84532, 5115],
+  closeOnSelect = false,
 }) => {
   const handleChainSelect = (chainIdStr: string) => {
     const chainId = parseInt(chainIdStr, 10);
@@ -35,7 +36,7 @@ export const SelectChainModal: React.FC<SelectChainModalProps> = ({
       onClose={onClose}
       onChainSelect={handleChainSelect}
       supportedChains={supportedChains}
-      closeOnSelect={false}
+      closeOnSelect={closeOnSelect}
     />
   );
 };

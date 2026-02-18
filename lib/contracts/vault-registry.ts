@@ -274,14 +274,17 @@ export async function getVaultsByChainWithSubgraph(
         if (m?.rateSnapshots && m.rateSnapshots.length > 1) {
           apy24h = computeApy24hLinear(m.rateSnapshots).apy;
         } else {
-          const fetchApyData = await fetch(
-            `/api/apy?vaultId=${v.token0.wrapped.address}`
-          );
-          console.log("fetchApyData", fetchApyData);
-          if (fetchApyData.ok) {
-            const apyJson = await fetchApyData.json();
-            if (typeof apyJson.averageApy === "number") {
-              apy24h = apyJson.averageApy;
+          const wrappedAddress = v.token0.wrapped?.address ?? v.token0.wrappedAddress;
+          if (wrappedAddress) {
+            const fetchApyData = await fetch(
+              `/api/apy?vaultId=${wrappedAddress}`
+            );
+            console.log("fetchApyData", fetchApyData);
+            if (fetchApyData.ok) {
+              const apyJson = await fetchApyData.json();
+              if (typeof apyJson.averageApy === "number") {
+                apy24h = apyJson.averageApy;
+              }
             }
           }
         }
@@ -378,14 +381,17 @@ export async function getVaultByIdWithSubgraph(
     if (m?.rateSnapshots && m.rateSnapshots.length > 1) {
       apy24h = computeApy24hLinear(m.rateSnapshots).apy;
     } else {
-      const fetchApyData = await fetch(
-        `/api/apy?vaultId=${base.token0.wrapped.address}`
-      );
-      console.log("fetchApyData", fetchApyData);
-      if (fetchApyData.ok) {
-        const apyJson = await fetchApyData.json();
-        if (typeof apyJson.averageApy === "number") {
-          apy24h = apyJson.averageApy;
+      const wrappedAddress = base.token0.wrapped?.address ?? base.token0.wrappedAddress;
+      if (wrappedAddress) {
+        const fetchApyData = await fetch(
+          `/api/apy?vaultId=${wrappedAddress}`
+        );
+        console.log("fetchApyData", fetchApyData);
+        if (fetchApyData.ok) {
+          const apyJson = await fetchApyData.json();
+          if (typeof apyJson.averageApy === "number") {
+            apy24h = apyJson.averageApy;
+          }
         }
       }
     }

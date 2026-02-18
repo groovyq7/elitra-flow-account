@@ -81,12 +81,18 @@ export const CrossChainAccountPopup: React.FC = () => {
   };
 
   return (
-    <div className="w-[340px] bg-background border border-border rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
-      {/* Arrow */}
-      <div className="absolute -top-[6px] right-6">
+    // Outer wrapper provides the positioning context for the arrow caret.
+    // overflow-hidden is intentionally NOT on this wrapper — it would clip the
+    // arrow which is positioned at -top-[6px] (above the card boundary).
+    <div className="relative w-[340px]">
+      {/* Arrow caret — sits outside the overflow-hidden card so it isn't clipped */}
+      <div className="absolute -top-[6px] right-6 z-10">
         <div className="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[7px] border-b-border" />
         <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-background absolute -bottom-[6px] left-1/2 -translate-x-1/2" />
       </div>
+
+      {/* Card — overflow-hidden here for rounded corners, arrow is safely outside */}
+      <div className="bg-background border border-border rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
 
       {/* Header */}
       <div className="px-4 pt-4 pb-3 border-b border-border">
@@ -175,6 +181,7 @@ export const CrossChainAccountPopup: React.FC = () => {
           Withdraw
         </button>
       </div>
-    </div>
+      </div>{/* end overflow-hidden card */}
+    </div>{/* end relative outer wrapper */}
   );
 };

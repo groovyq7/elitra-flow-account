@@ -1,3 +1,6 @@
 node_modules/
 .next/
 .env.local
+elitra-flow-account-main/
+.skills/
+.claude/

@@ -36,16 +36,10 @@ export function useUserPositions() {
     queryKey: ["userPositions", address, chainId],
     queryFn: async (): Promise<UserPosition[]> => {
       if (!address) return []
-
-      // Mock user positions - in production this would be on-chain calls
-      const vaults = getVaultsByChain(chainId)
-      return vaults.slice(0, 2).map((vault, index) => ({
-        vaultId: vault.id,
-        vault,
-        shares: BigInt(Math.floor(Math.random() * 1000000) * Math.pow(10, 18)),
-        assets: BigInt(Math.floor(Math.random() * 5000) * Math.pow(10, vault.token0.decimals)),
-        pendingRewards: BigInt(Math.floor(Math.random() * 100) * Math.pow(10, vault.token0.decimals)),
-      }))
+      // Real on-chain position fetching is handled per-vault by
+      // getUserVaultPositionFromSubgraph in the individual table components.
+      // This hook returns empty until a proper aggregation layer is implemented.
+      return []
     },
     enabled: !!address,
     staleTime: 30000,
@@ -61,9 +55,9 @@ export function useUserRewards(vaultId?: string) {
     queryKey: ["userRewards", address, vaultId, chainId],
     queryFn: async () => {
       if (!address) return BigInt(0)
-
-      // Mock pending rewards - in production this would be contract call
-      return BigInt(Math.floor(Math.random() * 50) * Math.pow(10, 18))
+      // Real pending rewards fetching is handled per-vault.
+      // Returning zero here until a proper aggregation layer is implemented.
+      return BigInt(0)
     },
     enabled: !!address,
     staleTime: 30000,

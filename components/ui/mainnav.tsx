@@ -180,7 +180,7 @@ export default function MainNav() {
                 ) : (
                   formatTVL(vaultData.reduce((acc, v) => acc + v.tvl, 0))
                 )}
-                {chain.testnet && (
+                {chain?.testnet && (
                   <Badge
                     variant="default"
                     className="ml-2 bg-gray-100 text-gray-800"

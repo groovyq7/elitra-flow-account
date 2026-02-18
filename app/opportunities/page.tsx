@@ -38,6 +38,15 @@ import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
 
+interface PortfolioData {
+  totalBalance: number;
+  eligibleToEarn: number;
+  estimatedRewards: number;
+  estimatedActiveRewards: number;
+  monthlyRewards: number;
+  depositedAmountUSD: number;
+}
+
 export default function OpportunitiesPage() {
   const { vaults } = useVaultData();
   const chain = useConfig().getClient().chain;
@@ -50,9 +59,9 @@ export default function OpportunitiesPage() {
   useEffect(() => { setHasMounted(true); }, []);
   const clientConnected = hasMounted && isConnected;
 
-  const [tokenInfos, setTokenInfos] = useState<any[]>([]);
-  const [vaultTokenInfos, setVaultTokenInfos] = useState<any[]>([]);
-  const [portfolioData, setPortfolioData] = useState<any>(null);
+  const [tokenInfos, setTokenInfos] = useState<any[]>([]); // TODO: type fetchTokenInfos return value
+  const [vaultTokenInfos, setVaultTokenInfos] = useState<any[]>([]); // TODO: type fetchTokenInfos return value
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [selectedTab, setSelectedTab] = useState<"available" | "deposited" | "account">(
     "available"
   );
@@ -100,7 +109,7 @@ export default function OpportunitiesPage() {
   const citreaVaults = useMemo(() => getVaultsByChain(5115), []);
   const availableVaults =
     vaults && vaults.length > 0 ? vaults : (citreaVaults as Vault[]);
-  const [vaultsData, setVaultsData] = useState<any>();
+  const [vaultsData, setVaultsData] = useState<Vault[] | undefined>();
   const citreaChain = useMemo(() => getChainConfig(5115)?.viemChain, []);
 
   // Build unique tokens array from availableVaults
@@ -117,14 +126,18 @@ export default function OpportunitiesPage() {
     [availableVaults]
   );
 
-  const withdrawTokens = availableVaults
-    ? availableVaults.map((vault) => ({
-      address: vault.id,
-      symbol: `e${vault.token0.symbol}`,
-      decimals: vault.token0.decimals,
-      name: vault.name,
-    }))
-    : [];
+  const withdrawTokens = useMemo(
+    () =>
+      availableVaults
+        ? availableVaults.map((vault) => ({
+            address: vault.id,
+            symbol: `e${vault.token0.symbol}`,
+            decimals: vault.token0.decimals,
+            name: vault.name,
+          }))
+        : [],
+    [availableVaults]
+  );
 
   // Always use a valid token object as initial state
   const defaultToken =
@@ -141,7 +154,7 @@ export default function OpportunitiesPage() {
         decimals: 6,
         name: "Elitra USD Coin",
       };
-  const [selectedToken, setSelectedToken] = useState<any>(defaultToken);
+  const [selectedToken, setSelectedToken] = useState<TokenType>(defaultToken);
 
   useEffect(() => {
     if (embeddedWalletAddress) {
@@ -385,10 +398,17 @@ export default function OpportunitiesPage() {
                           onClick={() => {
                             const token0 = depositTokens[0];
                             if (token0) {
+                              // Prefer wrapped ERC-20 address (e.g. WCBTC) over
+                              // native address (zeroAddress for CBTC)
                               openSupply({
-                                address: (token0 as any).wrappedAddress || token0.address,
-                                symbol: token0.symbol,
-                                decimals: token0.decimals,
+                                address:
+                                  (token0 as any).wrapped?.address ??
+                                  (token0 as any).wrappedAddress ??
+                                  token0.address,
+                                symbol:
+                                  (token0 as any).wrapped?.symbol ?? token0.symbol,
+                                decimals:
+                                  (token0 as any).wrapped?.decimals ?? token0.decimals,
                               });
                             }
                           }}
@@ -599,7 +619,7 @@ export default function OpportunitiesPage() {
 
                   <Tabs
                     value={selectedTab}
-                    onValueChange={(value) => setSelectedTab(value as any)}
+                    onValueChange={(value) => setSelectedTab(value as "available" | "deposited" | "account")}
                   >
                     <TabsList className="bg-gray-100 border border-gray-200">
                       <TabsTrigger value="available">Available</TabsTrigger>

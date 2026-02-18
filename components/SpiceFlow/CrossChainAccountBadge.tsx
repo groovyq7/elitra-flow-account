@@ -15,6 +15,8 @@ export const CrossChainAccountBadge: React.FC = () => {
   } = useSpiceStore();
   const badgeRef = useRef<HTMLButtonElement>(null);
   const [popupPosition, setPopupPosition] = useState({ top: 0, right: 0 });
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => { setIsMounted(true); }, []);
 
   useEffect(() => {
     if (!isAccountPopupOpen) return;
@@ -52,6 +54,26 @@ export const CrossChainAccountBadge: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isAccountPopupOpen, closeAccountPopup]);
+
+  // ESC key to close
+  useEffect(() => {
+    if (!isAccountPopupOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeAccountPopup();
+    };
+    document.addEventListener("keydown", handleEsc);
+    return () => document.removeEventListener("keydown", handleEsc);
+  }, [isAccountPopupOpen, closeAccountPopup]);
+
+  // Lock body scroll while popup is open
+  useEffect(() => {
+    if (!isAccountPopupOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [isAccountPopupOpen]);
 
   const hasBalance = crossChainBalance > 0;
 
@@ -114,7 +136,7 @@ export const CrossChainAccountBadge: React.FC = () => {
       </button>
 
       {/* Popup via portal */}
-      {isAccountPopupOpen &&
+      {isAccountPopupOpen && isMounted &&
         createPortal(
           <div
             id="cross-chain-account-popup"

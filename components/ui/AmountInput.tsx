@@ -243,7 +243,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           </Button>
         </div>
       </div>
-      {Number(tokenBalance) <= 0 && selectedToken.noBalanceText && (
+      {Number(tokenBalance) <= 0 && selectedToken.noBalanceText && selectedToken.dexLink && (
         <Link href={selectedToken.dexLink} target="_blank" className="text-xs text-gray-400 mt-2 hover:underline w-full block">
           {selectedToken.noBalanceText}
         </Link>

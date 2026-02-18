@@ -219,24 +219,24 @@ export const ADDRESSES: Record<number, Record<string, ProtocolAddresses>> = {
     },
     NUSD: {
       vaultAddress:
-        process.env.NEXT_PUBLIC_VAULT_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_VAULT_ADDRESS_5115_NUSD ||
         "0x2d41d86bb9e7161561fa3186b47d160467efcee3",
       tellerAddress:
-        process.env.NEXT_PUBLIC_TELLER_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_TELLER_ADDRESS_5115_NUSD ||
         "0x8b6097d4df90fe657d78bc187058bbd995afd0e0",
       accountantAddress:
-        process.env.NEXT_PUBLIC_ACCOUNTANT_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_ACCOUNTANT_ADDRESS_5115_NUSD ||
         "0xb427da8b757a30ace33c53be5bdb8a6a056294ee",
     },
     ENUSD: {
       vaultAddress:
-        process.env.NEXT_PUBLIC_VAULT_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_VAULT_ADDRESS_5115_NUSD ||
         "0x2d41d86bb9e7161561fa3186b47d160467efcee3",
       tellerAddress:
-        process.env.NEXT_PUBLIC_TELLER_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_TELLER_ADDRESS_5115_NUSD ||
         "0x8b6097d4df90fe657d78bc187058bbd995afd0e0",
       accountantAddress:
-        process.env.NEXT_PUBLIC_ACCOUNTANT_ADDRESS_5115_CBTC ||
+        process.env.NEXT_PUBLIC_ACCOUNTANT_ADDRESS_5115_NUSD ||
         "0xb427da8b757a30ace33c53be5bdb8a6a056294ee",
     },
   },
@@ -301,4 +301,4 @@ export const NATIVE_TOKEN_ADDRESS: Record<number, string> = {
   1: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
 };
 
-export const priceFeedMap: any = atomWithStorage("priceFeedMap", {});
+export const priceFeedMap = atomWithStorage<Record<string, number>>("priceFeedMap", {});

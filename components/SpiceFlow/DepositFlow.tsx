@@ -11,11 +11,23 @@ const AUTO_CLOSE_DELAY_MS = 3000;
 // Allowed tokens for SpiceDeposit — users can deposit these from external wallets
 const ALLOWED_DEPOSIT_TOKENS = ["usdc", "eth", "wbtc"];
 
+interface SdkDepositProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onDepositAmountChange?: (amount: string) => void;
+  allowedTokens?: string[];
+  destinationChainId?: number;
+  destinationTokenAddress?: `0x${string}`;
+  postDepositInstruction?: (bridgedAmount: string) => Promise<void>;
+  postDepositInstructionLabel?: string;
+  externalWalletAddress?: `0x${string}`;
+}
+
 export const DepositFlow: React.FC = () => {
   const { isDepositOpen, closeDeposit, addDeposit } = useSpiceStore();
   const { address: walletAddress } = useAccount();
 
-  const [SdkDeposit, setSdkDeposit] = useState<React.ComponentType<any> | null>(
+  const [SdkDeposit, setSdkDeposit] = useState<React.ComponentType<SdkDepositProps> | null>(
     null
   );
 
@@ -25,6 +37,11 @@ export const DepositFlow: React.FC = () => {
   const lastBridgedAmountRef = useRef<string>("");
   const depositSucceededRef = useRef(false);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref that exposes markSuccess to the postDepositInstruction callback.
+  // This is the PRIMARY success signal — the SDK calls postDepositInstruction
+  // only when the deposit has actually been submitted on-chain, making it more
+  // reliable than DOM observers or custom events.
+  const markSuccessRef = useRef<((source: string) => void) | null>(null);
 
   // ---------- Core close handlers ----------
 
@@ -51,8 +68,8 @@ export const DepositFlow: React.FC = () => {
     import("@spicenet-io/spiceflow-ui")
       .then((sdk) => {
         const Comp =
-          sdk.SpiceDeposit ??
-          (sdk.default as any)?.SpiceDeposit ??
+          (sdk as { SpiceDeposit?: React.ComponentType<SdkDepositProps> }).SpiceDeposit ??
+          ((sdk as { default?: { SpiceDeposit?: React.ComponentType<SdkDepositProps> } }).default?.SpiceDeposit) ??
           null;
         if (Comp) setSdkDeposit(() => Comp);
       })
@@ -114,6 +131,10 @@ export const DepositFlow: React.FC = () => {
       }, AUTO_CLOSE_DELAY_MS);
     };
 
+    // Expose markSuccess via ref so the postDepositInstruction callback (primary
+    // success signal) can call it without violating hook rules.
+    markSuccessRef.current = markSuccess;
+
     // Signal 1: tx-complete CustomEvent (7702/swap paths)
     const handleTxComplete = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -124,7 +145,7 @@ export const DepositFlow: React.FC = () => {
     const handleDepositCompleted = () =>
       markSuccess("deposit-completed event");
 
-    // Signal 3: deposit-completed CustomEvent (emitted by SDK)
+    // Signal 3: cross-chain-deposit-completed CustomEvent (emitted by SDK)
     const handleCrossChainCompleted = () =>
       markSuccess("cross-chain-deposit-completed event");
 
@@ -152,6 +173,8 @@ export const DepositFlow: React.FC = () => {
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
+      // Clear the ref on cleanup so stale markSuccess isn't called after unmount
+      markSuccessRef.current = null;
       window.removeEventListener("tx-complete", handleTxComplete);
       window.removeEventListener("deposit-completed", handleDepositCompleted);
       window.removeEventListener(
@@ -234,8 +257,13 @@ export const DepositFlow: React.FC = () => {
     lastDepositAmountRef.current = amount;
   }, []);
 
+  // Primary success signal — SDK calls this after a successful deposit.
+  // It both records the bridged amount AND triggers markSuccess so the balance
+  // is updated even if none of the fallback custom events / DOM observers fire.
   const handlePostDeposit = useCallback(async (bridgedAmount: string) => {
     lastBridgedAmountRef.current = bridgedAmount;
+    // Fire markSuccess through the ref (safe to call async from callback)
+    markSuccessRef.current?.("postDepositInstruction callback");
   }, []);
 
   // ---------- Render ----------

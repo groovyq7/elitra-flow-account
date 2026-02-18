@@ -6,7 +6,7 @@ import { getChainConfig, getSupportedTokens } from "@/lib/utils/chains";
 const CrossChainDepositModalUI = dynamic(
   () => import("@spicenet-io/spiceflow-ui").then((mod) => mod.CrossChainDepositModal),
   { ssr: false }
-) as any;
+) as React.ComponentType<Record<string, unknown>>;
 
 interface CrossChainDepositModalProps {
   isOpen: boolean;

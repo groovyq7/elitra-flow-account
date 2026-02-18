@@ -22,12 +22,45 @@ const SupplyViaSpiceFlow = dynamic(
   { ssr: false }
 );
 
+/**
+ * Error boundary that catches SDK component crashes and renders nothing
+ * instead of taking down the entire app. Logs the error for debugging.
+ */
+class SdkErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error("[SdkErrorBoundary] SDK component crashed:", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
 export const GlobalModals: React.FC = () => {
   return (
     <>
-      <DepositFlow />
-      <WithdrawFlow />
-      <SupplyViaSpiceFlow />
+      <SdkErrorBoundary>
+        <DepositFlow />
+      </SdkErrorBoundary>
+      <SdkErrorBoundary>
+        <WithdrawFlow />
+      </SdkErrorBoundary>
+      <SdkErrorBoundary>
+        <SupplyViaSpiceFlow />
+      </SdkErrorBoundary>
     </>
   );
 };

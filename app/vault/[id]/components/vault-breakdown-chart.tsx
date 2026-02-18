@@ -93,7 +93,11 @@ export function VaultBreakdownChart({
       if (!breakdown || !chain || !vault) return;
       try {
         setLoading(true);
-        const data = await fetchProtocolBreakdown(breakdown, vault.token0.wrapped.address);
+        const tokenAddr =
+          vault.token0?.wrapped?.address ??
+          vault.token0?.wrappedAddress ??
+          vault.token0?.address;
+        const data = await fetchProtocolBreakdown(breakdown, tokenAddr);
         if (!cancelled) setBreakdownData(data);
       } catch (e) {
         if (!cancelled) setBreakdownData(null);

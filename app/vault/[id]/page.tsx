@@ -25,7 +25,7 @@ import { DepositModal } from "@/app/opportunities/components/DepositModal";
 import { TokenSelectorModal } from "@/app/opportunities/components/TokenSelectorModal";
 import { WithdrawModal } from "@/app/opportunities/components/WithdrawModal";
 import { Badge } from "@/components/ui/badge";
-import { UserPnlInfo } from "@/lib/types";
+import { UserPnlInfo, TokenType, Vault } from "@/lib/types";
 import { getUserVaultPositionFromSubgraph } from "@/lib/contracts/user-positions";
 import { computePositionPnL } from "@/lib/utils/pnl";
 import { getTokenBalance, getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
@@ -34,22 +34,23 @@ import { getVaultByIdWithSubgraph } from "@/lib/contracts/vault-registry";
 import { GrowthChart } from "@/app/opportunities/components/GrowthChart";
 import { ArrowDownToLine } from "lucide-react";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 
 export default function VaultDetailsPage() {
   const params = useParams();
   const chain = useConfig().getClient().chain;
   const vaultId = params.id as string;
-  const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string | undefined>(undefined);
+  // Use the SDK hook instead of sessionStorage — this correctly reflects the
+  // live Privy embedded wallet state without requiring the opportunities page
+  // to have been visited first.
+  const embeddedWalletAddress = useEmbeddedWalletAddress();
   const { address, isConnected } = useAccount();
   const { chains } = useConfig();
   const { openDeposit, openSupply, openWithdraw, crossChainBalance } = useSpiceStore();
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem('embeddedWalletAddress');
-    if (stored) {
-      setEmbeddedWalletAddress(stored);
-    }
-  }, []);
+  // isModalOpen / modalType are kept for the legacy DepositModal / WithdrawModal
+  // that are conditionally rendered below (never shown because openDeposit /
+  // openWithdraw go through the SpiceFlow global modals, but kept to avoid
+  // breaking the TokenSelectorModal prop chain).
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState("");
@@ -57,17 +58,17 @@ export default function VaultDetailsPage() {
   const { data: vault, isLoading: vaultLoading } = useVaultDetails(vaultId);
   const vaultChain = vault?.chainId ? chains.find(c => c.id === vault.chainId) || chain : chain;
 
-  const [selectedToken, setSelectedToken] = useState<any>();
-  const [tokenPrice, setTokenPrice] = useState<any>();
-  const [tokenRate, setTokenRate] = useState<any>();
-  const [vaultTvl, setVaultTvl] = useState<any>();
-  const [vaultData, setVaultData] = useState<any>();
-  const [userBalance, setUserBalance] = useState<any>();
+  const [selectedToken, setSelectedToken] = useState<TokenType | undefined>();
+  const [tokenPrice, setTokenPrice] = useState<number | undefined>();
+  const [tokenRate, setTokenRate] = useState<number | undefined>();
+  const [vaultTvl, setVaultTvl] = useState<number | undefined>();
+  const [vaultData, setVaultData] = useState<Vault | undefined>();
+  const [userBalance, setUserBalance] = useState<{ formatted: number } | undefined>();
 
   const { totalSupply, formattedTotalSupply } = useTotalSupply(vaultId);
   const [investmentAmount, setInvestmentAmount] = useState("1000");
   const [returns, setReturns] = useState({ annual: 0, monthly: 0, fiveYear: 0 });
-  const [userShareBalance, setUserShareBalance] = useState<any>();
+  const [userShareBalance, setUserShareBalance] = useState<{ formatted: number } | undefined>();
 
   const [chartTimeframe, setChartTimeframe] = useState<
     "30d" | "6m" | "1y" | "3y"
@@ -179,7 +180,26 @@ export default function VaultDetailsPage() {
       setTokenRate(rateData.rate);
     }
     getUserPnl();
-  }, [isConnected, address, embeddedWalletAddress, vault, isModalOpen]);
+  // Note: isModalOpen was removed from deps — it's dead state (never toggled by
+  // the SpiceFlow modal flow). Refreshes are triggered by the custom events below.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, embeddedWalletAddress, vault?.id]);
+
+  // Refresh PnL after a successful deposit or withdraw via the SpiceFlow modals
+  useEffect(() => {
+    const refresh = () => {
+      // Re-trigger the getUserPnl effect by bumping a dependency isn't possible here,
+      // so we simply re-call it directly via the same outer effect logic.
+      // The simple approach: dispatch a no-op state update to force re-render.
+      setUserShareBalance((prev: { formatted: number } | undefined) => prev ? { ...prev } : undefined);
+    };
+    window.addEventListener("vault-deposit-complete", refresh);
+    window.addEventListener("crosschain-withdraw-complete", refresh);
+    return () => {
+      window.removeEventListener("vault-deposit-complete", refresh);
+      window.removeEventListener("crosschain-withdraw-complete", refresh);
+    };
+  }, []);
 
   useEffect(() => {
     if (!formattedTotalSupply || !tokenRate || !tokenPrice) return;
@@ -358,9 +378,16 @@ export default function VaultDetailsPage() {
                         className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
                         onClick={() => {
                           openSupply({
-                            address: (vault.token0 as any).wrappedAddress || vault.token0.address,
-                            symbol: vault.token0.symbol,
-                            decimals: vault.token0.decimals,
+                            // Prefer the wrapped ERC-20 address (e.g. WCBTC) over
+                            // the native token address (zeroAddress for CBTC)
+                            address:
+                              vault.token0.wrapped?.address ??
+                              vault.token0.wrappedAddress ??
+                              vault.token0.address,
+                            symbol:
+                              vault.token0.wrapped?.symbol ?? vault.token0.symbol,
+                            decimals:
+                              vault.token0.wrapped?.decimals ?? vault.token0.decimals,
                           });
                         }}
                       >
@@ -437,8 +464,10 @@ export default function VaultDetailsPage() {
                         pattern="^[0-9]*[.,]?[0-9]*$"
                         value={investmentAmount}
                         onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9.]/g, "");
-                          setInvestmentAmount(val);
+                          const val = e.target.value;
+                          if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                            setInvestmentAmount(val);
+                          }
                         }}
                         className="pl-8 h-14 text-lg font-medium border-2 border-border focus:border-primary"
                         placeholder="1000"

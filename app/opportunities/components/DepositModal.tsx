@@ -55,7 +55,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   >("idle");
   const [txHash, setTxHash] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [vaultRate, setVaultRate] = useState<any>(null);
+  const [vaultRate, setVaultRate] = useState<{ raw: bigint; formatted: string } | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null); // token price in USD
 
   const [isRateLoading, setIsRateLoading] = useState(false);
@@ -69,7 +69,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     };
   const depositTokenAddress = selectedToken.address;
   const decimals = selectedToken.decimals;
-  const parsedAmount = BigInt(Math.floor(Number(amount) * 10 ** decimals));
+  const parsedAmount = amount && !isNaN(Number(amount)) ? BigInt(Math.floor(Number(amount) * 10 ** decimals)) : 0n;
   const selectedVault = vaults.find(
     (v) => v.token0.address === selectedToken.address
   );
@@ -146,7 +146,6 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
     // Format for display - convert back to human readable format
     const formatShares = (shares: bigint) => {
-      console.log("Formatting shares", shares, selectedToken.decimals);
       if (shares === BigInt(0)) return "0";
 
       // Convert to number with proper decimals
@@ -363,7 +362,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
               <div className="font-semibold flex gap-2 items-center">
                 <Image
                   src={
-                    getTokenImage(selectedVault?.symbol!) || "/placeholder.svg"
+                    getTokenImage(selectedVault?.symbol ?? "") || "/placeholder.svg"
                   }
                   alt={selectedVault?.symbol || ""}
                   width={20}
@@ -416,7 +415,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             }}
           >
             {isDisabled ? (
-              "InsufInsufficient balance"
+              "Insufficient balance"
             ) : isAllowanceLoading || isAllowanceConfirming ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

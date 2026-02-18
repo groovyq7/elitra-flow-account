@@ -66,7 +66,7 @@ export interface ProtocolData {
 export interface VaultType {
   id: string;
   name: string;
-  icon: any;
+  icon: string;
   apy: string;
   description: string;
   active: boolean;
@@ -77,7 +77,20 @@ export interface TokenType {
   symbol: string;
   name: string;
   decimals: number;
-  [key: string]: any;
+  /** Wrapped version of a native token (e.g. WCBTC for CBTC) */
+  wrapped?: {
+    address: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+    noBalanceText?: string;
+    dexLink?: string;
+  };
+  /** Convenience shorthand for wrapped.address */
+  wrappedAddress?: string;
+  noBalanceText?: string;
+  dexLink?: string;
+  [key: string]: unknown;
 }
 
 export interface UserPnlInfo {
@@ -100,7 +113,16 @@ export interface Call {
   data: `0x${string}`;
 }
 
+export interface TokenTransfer {
+  from: "solver" | `0x${string}`;
+  to: `0x${string}`;
+  token: `0x${string}`;
+  amount: bigint;
+}
+
 export interface ChainBatch {
   chainId: number;
   calls: Call[];
+  /** Optional cross-chain token transfers for solver-mediated external withdrawals */
+  tokenTransfers?: TokenTransfer[];
 }

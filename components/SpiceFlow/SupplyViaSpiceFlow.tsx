@@ -302,15 +302,17 @@ export const SupplyViaSpiceFlow: React.FC = () => {
                 </label>
                 <div className="relative">
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     value={amount}
                     onChange={(e) => {
-                      setAmount(e.target.value);
-                      setError(undefined);
+                      const val = e.target.value;
+                      if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                        setAmount(val);
+                        setError(undefined);
+                      }
                     }}
                     placeholder="0.00"
-                    min="0"
-                    step="any"
                     className="w-full px-4 py-3 pr-20 bg-muted/50 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-lg"
                     autoFocus
                   />

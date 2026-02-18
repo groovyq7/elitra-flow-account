@@ -98,7 +98,15 @@ export function ElitraAccountTab() {
         </Button>
         {crossChainBalance > 0 && (
           <Button
-            onClick={() => openSupply()}
+            onClick={() =>
+              openSupply({
+                // Default to WCBTC — the primary vault deposit token on Citrea Testnet.
+                // openSupply() requires a non-null asset or SupplyViaSpiceFlow won't render.
+                address: "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93",
+                symbol: "WCBTC",
+                decimals: 18,
+              })
+            }
             className="flex-1 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white font-semibold text-sm flex items-center justify-center gap-2"
           >
             <Zap className="w-4 h-4" />

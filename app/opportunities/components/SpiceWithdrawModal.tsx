@@ -21,7 +21,7 @@ const CITREA_TOKENS_CONFIG = [
   },
 ];
 
-const SUPPORTED_CHAINS = [11155111, 84532, 5115];
+const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
 function getWBTCForChain(chainId: number): { address: `0x${string}`; decimals: number } | null {
   const config = getChainConfig(chainId);
@@ -187,7 +187,8 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     ? "Withdraw vault shares to your Elitra Account balance."
     : `Withdraw vault shares to your external wallet. You will receive WBTC on ${selectedChainId != null ? getChainConfig(selectedChainId)?.displayName ?? `chain ${selectedChainId}` : "Citrea"}.`;
 
-  const WithdrawWidgetModalAny = WithdrawWidgetModal as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK type mismatch
+  const WithdrawWidgetModalAny = WithdrawWidgetModal as React.ComponentType<Record<string, unknown>>;
 
   return (
     <WithdrawWidgetModalAny
