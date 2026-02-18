@@ -65,7 +65,7 @@ export const citreaTestnet = defineChain({
 });
 
 export const supportedChains = [citreaTestnet] as const;
-const projectId = "your-walletconnect-project-id";
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "your-walletconnect-project-id";
 
 const connectors = connectorsForWallets(
   [

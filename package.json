@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "postinstall": "node scripts/patch-spiceflow.js"
   },
   "dependencies": {
     "@dynamic-labs/ethereum": "^4.44.3",
@@ -22,7 +23,7 @@
     "@radix-ui/react-toast": "latest",
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@spicenet-io/spiceflow-core": "0.1.3",
-    "@spicenet-io/spiceflow-ui": "1.11.13",
+    "@spicenet-io/spiceflow-ui": "^1.11.13",
     "@tanstack/react-query": "latest",
     "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",

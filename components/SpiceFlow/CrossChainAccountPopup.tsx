@@ -69,13 +69,15 @@ export const CrossChainAccountPopup: React.FC = () => {
   const hasDeposits = depositHistory.length > 0;
 
   const handleDeposit = () => {
-    closeAccountPopup();
+    // Open deposit first, then close popup on next tick to avoid
+    // the popup unmounting before the click event completes
     openDeposit();
+    setTimeout(() => closeAccountPopup(), 0);
   };
 
   const handleWithdraw = () => {
-    closeAccountPopup();
     openWithdraw();
+    setTimeout(() => closeAccountPopup(), 0);
   };
 
   return (

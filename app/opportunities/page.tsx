@@ -9,6 +9,7 @@ import {
   ExternalLink,
   ChevronUp,
   ChevronDown,
+  ArrowDownToLine,
 } from "lucide-react";
 import { useVaultData } from "@/hooks/use-vault-data";
 import { formatPrice } from "../../lib/utils/format";
@@ -26,42 +27,33 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { LINKS, OFFICIAL_TOKENS, VAULT_TOKENS } from "@/lib/constants";
 import { DepositedAssetsTable } from "./components/DepositedAssetsTable";
+import { ElitraAccountTab } from "./components/ElitraAccountTab";
 import { zeroAddress } from "viem";
 import { Tabs } from "@radix-ui/react-tabs";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { getVaultsByChain, getVaultsByChainWithSubgraph } from "@/lib/contracts/vault-registry";
 import { getChainConfig } from "@/lib/utils/chains";
 import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 
-import dynamic from "next/dynamic";
 import { trackModalOpen } from "@/lib/analytics";
-
-const SpiceDepositModal = dynamic(
-  () =>
-    import("./components/SpiceDepositModal").then(
-      (mod) => mod.SpiceDepositModal
-    ),
-  { ssr: false }
-);
-
-const SpiceWithdrawModal = dynamic(
-  () =>
-    import("./components/SpiceWithdrawModal").then(
-      (mod) => mod.SpiceWithdrawModal
-    ),
-  { ssr: false }
-);
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 export default function OpportunitiesPage() {
   const { vaults } = useVaultData();
   const chain = useConfig().getClient().chain;
   const { address, isConnected } = useAccount();
 
+  // Defer wallet-dependent UI until after hydration to prevent SSR mismatch.
+  // wagmi may restore a connected session on the client, but the server always
+  // renders as disconnected, causing a hydration error without this guard.
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+  const clientConnected = hasMounted && isConnected;
+
   const [tokenInfos, setTokenInfos] = useState<any[]>([]);
   const [vaultTokenInfos, setVaultTokenInfos] = useState<any[]>([]);
   const [portfolioData, setPortfolioData] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState<"available" | "deposited">(
+  const [selectedTab, setSelectedTab] = useState<"available" | "deposited" | "account">(
     "available"
   );
 
@@ -70,6 +62,7 @@ export default function OpportunitiesPage() {
   >("3y");
 
   const embeddedWalletAddress = useEmbeddedWalletAddress();
+  const { openDeposit, openSupply, openWithdraw, crossChainBalance } = useSpiceStore();
 
   // Calculate total APY from tokenInfos (weighted average)
   const calculateTotalAPY = (tokenInfos: any[]) => {
@@ -100,9 +93,7 @@ export default function OpportunitiesPage() {
 
   // Deposit/Withdraw modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<
-    "deposit" | "spicedeposit" | "spicewithdraw-collateral" | "spicewithdraw-external"
-  >("deposit");
+  const [modalType, setModalType] = useState<"deposit">("deposit");
   const [amount, setAmount] = useState("");
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
 
@@ -113,14 +104,18 @@ export default function OpportunitiesPage() {
   const citreaChain = useMemo(() => getChainConfig(5115)?.viemChain, []);
 
   // Build unique tokens array from availableVaults
-  const depositTokens = Array.from(
-    new Map(
-      availableVaults
-        .flatMap((vault) => [vault.token0, vault.token1])
-        .filter(Boolean)
-        .map((token) => [token!.address, token])
-    ).values()
-  ).filter(Boolean);
+  const depositTokens = useMemo(
+    () =>
+      Array.from(
+        new Map(
+          availableVaults
+            .flatMap((vault) => [vault.token0, vault.token1])
+            .filter(Boolean)
+            .map((token) => [token!.address, token])
+        ).values()
+      ).filter(Boolean),
+    [availableVaults]
+  );
 
   const withdrawTokens = availableVaults
     ? availableVaults.map((vault) => ({
@@ -284,7 +279,7 @@ export default function OpportunitiesPage() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
-    JSON.stringify(depositTokens.map((t) => t?.address)),
+    depositTokens,
     address,
     embeddedWalletAddress,
     chain,
@@ -371,7 +366,7 @@ export default function OpportunitiesPage() {
                   </div>
                 )}
               </CardTitle>
-              {isConnected ? (
+              {clientConnected ? (
                 portfolioData ? (
                   portfolioData.eligibleToEarn ||
                     portfolioData.depositedAmountUSD ? (
@@ -379,43 +374,37 @@ export default function OpportunitiesPage() {
                       <Button
                         className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 group-hover:from-blue-700 group-hover:to-blue-600 transition-all duration-200"
                         onClick={() => {
-                          setModalType("spicedeposit");
-                          setSelectedToken(depositTokens[0]);
-                          setIsModalOpen(true);
+                          openDeposit();
                         }}
                       >
                         Deposit
                       </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 flex items-center gap-1">
-                            Withdraw
-                            <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setModalType("spicewithdraw-collateral");
-                              setSelectedToken(withdrawTokens[0]);
-                              setIsModalOpen(true);
-                            }}
-                            className="cursor-pointer py-2.5 px-4 text-sm"
-                          >
-                            Keep on Elitra
-                          </DropdownMenuItem>
-                          {/* <DropdownMenuItem
-                            onClick={() => {
-                              setModalType("spicewithdraw-external");
-                              setSelectedToken(withdrawTokens[0]);
-                              setIsModalOpen(true);
-                            }}
-                            className="cursor-pointer py-2.5 px-4 text-sm"
-                          >
-                            To external wallet
-                          </DropdownMenuItem> */}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {crossChainBalance > 0 && (
+                        <Button
+                          className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
+                          onClick={() => {
+                            const token0 = depositTokens[0];
+                            if (token0) {
+                              openSupply({
+                                address: (token0 as any).wrappedAddress || token0.address,
+                                symbol: token0.symbol,
+                                decimals: token0.decimals,
+                              });
+                            }
+                          }}
+                        >
+                          <ArrowDownToLine className="h-3 w-3" />
+                          Supply to Vault
+                        </Button>
+                      )}
+                      <Button
+                        className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+                        onClick={() => {
+                          openWithdraw();
+                        }}
+                      >
+                        Withdraw
+                      </Button>
                     </div>
                   ) : (
                     <div className="flex">
@@ -615,6 +604,7 @@ export default function OpportunitiesPage() {
                     <TabsList className="bg-gray-100 border border-gray-200">
                       <TabsTrigger value="available">Available</TabsTrigger>
                       <TabsTrigger value="deposited">Deposited</TabsTrigger>
+                      <TabsTrigger value="account">Elitra Account</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
@@ -644,6 +634,10 @@ export default function OpportunitiesPage() {
                       setIsModalOpen={setIsModalOpen}
                     />
                   )}
+
+                  {selectedTab === "account" && (
+                    <ElitraAccountTab />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -661,7 +655,7 @@ export default function OpportunitiesPage() {
           >
             <div
               className={
-                isConnected && portfolioData?.totalBalance > 0
+                clientConnected && portfolioData?.totalBalance > 0
                   ? ""
                   : "filter blur-sm pointer-events-none select-none"
               }
@@ -676,13 +670,13 @@ export default function OpportunitiesPage() {
                 isActive={portfolioData?.depositedAmountUSD > 0}
               />
             </div>
-            {(!isConnected || portfolioData?.totalBalance === 0) && (
+            {(!clientConnected || portfolioData?.totalBalance === 0) && (
               <div className="absolute border border-gray-200 shadow-md rounded-lg inset-0 flex flex-col items-center justify-center bg-white/0 backdrop-blur-sm z-10">
                 <span className="mb-4 text-xs text-muted-foreground px-3 text-center font-medium">
-                  {isConnected ? `Deposit assets ` : `Connect your wallet `} to
+                  {clientConnected ? `Deposit assets ` : `Connect your wallet `} to
                   view growth projections chart
                 </span>
-                {isConnected ? (
+                {clientConnected ? (
                   <Link
                     href={LINKS.get}
                     target="_blank"
@@ -711,43 +705,6 @@ export default function OpportunitiesPage() {
             : ([] as Vault[])
         }
       />
-
-      {/* Spice Deposit Modal */}
-      {isModalOpen && modalType === "spicedeposit" && (
-        <SpiceDepositModal
-          open={isModalOpen && modalType === "spicedeposit"}
-          onOpenChange={setIsModalOpen}
-          tokenSymbol={selectedToken.symbol}
-          yieldPercentage={
-            tokenInfos.find((t) => t.token.address === selectedToken.address)
-              ?.apy as number
-          }
-        />
-      )}
-
-      {/* Spice Withdraw Modal – cross-chain collateral */}
-      {isModalOpen && modalType === "spicewithdraw-collateral" && (
-        <SpiceWithdrawModal
-          open={isModalOpen && modalType === "spicewithdraw-collateral"}
-          onOpenChange={setIsModalOpen}
-          tokenSymbol={selectedToken.symbol}
-          externalWalletAddress={address as `0x${string}`}
-          embeddedWalletAddress={embeddedWalletAddress as `0x${string}`}
-          destination="collateral"
-        />
-      )}
-
-      {/* Spice Withdraw Modal – external wallet (with chain selector) */}
-      {isModalOpen && modalType === "spicewithdraw-external" && (
-        <SpiceWithdrawModal
-          open={isModalOpen && modalType === "spicewithdraw-external"}
-          onOpenChange={setIsModalOpen}
-          tokenSymbol={selectedToken.symbol}
-          externalWalletAddress={address as `0x${string}`}
-          embeddedWalletAddress={embeddedWalletAddress as `0x${string}`}
-          destination="external"
-        />
-      )}
 
       {/* Direct Citrea Deposit Modal (fallback for Citrea-only deposits) */}
       {isModalOpen && modalType === "deposit" && (

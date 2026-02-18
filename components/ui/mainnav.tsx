@@ -19,14 +19,49 @@ import {
 import { Button } from "./button";
 import { toast } from "@/hooks/use-toast";
 import { CrossChainAccountBadge } from "../SpiceFlow/CrossChainAccountBadge";
+import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 
-export default function MainNav() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-
+/**
+ * Privy-dependent nav items — only rendered after SpiceFlowProvider
+ * has mounted its internal PrivyProvider (avoids SSR warnings).
+ */
+function PrivyNavItems() {
   const { authenticated } = usePrivy();
   const { wallets } = useWallets();
   const embeddedWallet = wallets.find((w) => w.connectorType === "embedded");
   const embeddedWalletAddress = embeddedWallet?.address;
+
+  return (
+    <>
+      {authenticated && embeddedWalletAddress && (
+        <div className="relative group">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1.5 text-xs font-medium"
+            onClick={() => {
+              navigator.clipboard.writeText(embeddedWalletAddress);
+              toast({
+                title: "Embedded Wallet Address copied!",
+              });
+            }}
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Copy Embedded Wallet Address
+          </Button>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50">
+            Copy this address and paste it into the portal task submission to mark your task completion.
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function MainNav() {
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const isSpiceFlowReady = useSpiceFlowReady();
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");
@@ -156,30 +191,9 @@ export default function MainNav() {
               </div>
             </div>
 
-            {authenticated && <CrossChainAccountBadge />}
+            <CrossChainAccountBadge />
 
-            {authenticated && embeddedWalletAddress && (
-              <div className="relative group">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 text-xs font-medium"
-                  onClick={() => {
-                    navigator.clipboard.writeText(embeddedWalletAddress);
-                    toast({
-                      title: "Embedded Wallet Address copied!",
-                    });
-                  }}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy Embedded Wallet Address
-                </Button>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50">
-                  Copy this address and paste it into the portal task submission to mark your task completion.
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
-                </div>
-              </div>
-            )}
+            {isSpiceFlowReady && <PrivyNavItems />}
 
             <WalletConnectButton />
           </div>

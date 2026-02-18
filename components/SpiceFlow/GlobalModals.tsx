@@ -14,11 +14,20 @@ const WithdrawFlow = dynamic(
   { ssr: false }
 );
 
+const SupplyViaSpiceFlow = dynamic(
+  () =>
+    import("./SupplyViaSpiceFlow").then((m) => ({
+      default: m.SupplyViaSpiceFlow,
+    })),
+  { ssr: false }
+);
+
 export const GlobalModals: React.FC = () => {
   return (
     <>
       <DepositFlow />
       <WithdrawFlow />
+      <SupplyViaSpiceFlow />
     </>
   );
 };

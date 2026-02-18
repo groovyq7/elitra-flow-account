@@ -1,7 +1,7 @@
 // Centralized SpiceFlow configuration constants
 // All chain IDs, delegate contracts, and API config in one place
 
-export const SUPPORTED_CHAIN_IDS = [11155111, 84532, 5115] as const;
+export const SUPPORTED_CHAIN_IDS = [11155111, 421614, 84532, 5115] as const;
 export const SPICEFLOW_MODE = '7702' as const;
 export const NATIVE_CHAIN_ID = 5115; // Citrea Testnet
 export const SPICENET_API_URL =
@@ -12,6 +12,7 @@ export const SOLVER_ADDRESS =
 
 export const DELEGATE_CONTRACTS: Record<number, `0x${string}`> = {
   11155111: "0xDF7d39BB544778F467D10b08B1F5C170fd7fB480", // Sepolia
+  421614: "0x151755d1bdFeB6082D141EF86e4291b2e902b43F",   // Arbitrum Sepolia
   84532: "0xD4C4A222cdd42f5c3219249a083a5aBf1420E9D8",    // Base Sepolia
   5115: "0x9DE3D53419a8F821b6E2039A7249c5738004FB94",     // Citrea Testnet
 };

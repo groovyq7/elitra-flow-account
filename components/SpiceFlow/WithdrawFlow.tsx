@@ -90,21 +90,21 @@ export const WithdrawFlow: React.FC = () => {
     }
   }, [isWithdrawOpen]);
 
-  // ESC key to close
+  // ESC key to close (cancel — no side effects)
   useEffect(() => {
     if (!isWithdrawOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
+      if (e.key === "Escape") closeWithdraw();
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
-  }, [isWithdrawOpen]);
+  }, [isWithdrawOpen, closeWithdraw]);
 
   const isCrossChainExternal = selectedChainId != null;
 
   // Build withdrawal batches for Teller.bulkWithdrawNow on Citrea
   const withdrawBatches = useMemo((): ChainBatch[] => {
-    if (!tokenAddress) return [];
+    if (!tokenAddress || !embeddedWalletAddress) return [];
     const tellerSymbol = TELLER_SYMBOL_MAP[selectedToken];
     const addresses = getAddresses(NATIVE_CHAIN_ID, tellerSymbol);
     if (!addresses?.tellerAddress) return [];
@@ -171,7 +171,13 @@ export const WithdrawFlow: React.FC = () => {
     externalWalletAddress,
   ]);
 
-  const handleClose = useCallback(() => {
+  // Cancel handler — closes modal without recording anything
+  const handleCancel = useCallback(() => {
+    closeWithdraw();
+  }, [closeWithdraw]);
+
+  // Success handler — only called when withdrawal actually completes
+  const handleComplete = useCallback(() => {
     // Dispatch event for vault page refresh
     window.dispatchEvent(
       new CustomEvent("crosschain-withdraw-complete", {
@@ -179,7 +185,7 @@ export const WithdrawFlow: React.FC = () => {
       })
     );
 
-    // Record withdrawal in store
+    // Record withdrawal in store and deduct from cross-chain balance
     const amount = withdrawInput.assetAmount;
     if (amount && parseFloat(amount) > 0) {
       addWithdraw({
@@ -191,10 +197,11 @@ export const WithdrawFlow: React.FC = () => {
         destinationChainId: selectedChainId || NATIVE_CHAIN_ID,
         timestamp: Date.now(),
       });
+      deductBalance(parseFloat(amount));
     }
 
     closeWithdraw();
-  }, [closeWithdraw, withdrawInput.assetAmount, selectedChainId, selectedToken, addWithdraw]);
+  }, [closeWithdraw, withdrawInput.assetAmount, selectedChainId, selectedToken, addWithdraw, deductBalance]);
 
   const handleChainSelect = (chainId: number | undefined) => {
     if (!chainId) return;
@@ -234,8 +241,8 @@ export const WithdrawFlow: React.FC = () => {
   return (
     <WithdrawWidgetModalAny
       isOpen={true}
-      onClose={handleClose}
-      onComplete={handleClose}
+      onClose={handleCancel}
+      onComplete={handleComplete}
       title={title}
       description={description}
       withdrawBatches={withdrawBatches}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
+import { useAccount } from "wagmi";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { NATIVE_CHAIN_ID, WCBTC_ADDRESS } from "@/lib/spiceflowConfig";
 
@@ -12,6 +13,7 @@ const ALLOWED_DEPOSIT_TOKENS = ["usdc", "eth", "wbtc"];
 
 export const DepositFlow: React.FC = () => {
   const { isDepositOpen, closeDeposit, addDeposit } = useSpiceStore();
+  const { address: walletAddress } = useAccount();
 
   const [SdkDeposit, setSdkDeposit] = useState<React.ComponentType<any> | null>(
     null
@@ -22,10 +24,15 @@ export const DepositFlow: React.FC = () => {
   const lastDepositAssetRef = useRef<string>("USDC");
   const lastBridgedAmountRef = useRef<string>("");
   const depositSucceededRef = useRef(false);
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ---------- Core close handlers ----------
 
   const handleClose = useCallback(() => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
     closeDeposit();
     lastDepositAmountRef.current = "";
     lastDepositAssetRef.current = "USDC";
@@ -93,7 +100,7 @@ export const DepositFlow: React.FC = () => {
             asset,
             amount,
             usdValue,
-            sourceChain: "Cross-Chain",
+            sourceChain: "Elitra Account",
             timestamp: Date.now(),
           });
         } catch (err) {
@@ -102,7 +109,7 @@ export const DepositFlow: React.FC = () => {
       }
 
       // Auto-close after delay so user sees the success banner
-      setTimeout(() => {
+      autoCloseTimerRef.current = setTimeout(() => {
         handleClose();
       }, AUTO_CLOSE_DELAY_MS);
     };
@@ -117,7 +124,7 @@ export const DepositFlow: React.FC = () => {
     const handleDepositCompleted = () =>
       markSuccess("deposit-completed event");
 
-    // Signal 3: cross-chain-deposit-completed CustomEvent
+    // Signal 3: deposit-completed CustomEvent (emitted by SDK)
     const handleCrossChainCompleted = () =>
       markSuccess("cross-chain-deposit-completed event");
 
@@ -246,6 +253,7 @@ export const DepositFlow: React.FC = () => {
         destinationTokenAddress={WCBTC_ADDRESS}
         postDepositInstruction={handlePostDeposit}
         postDepositInstructionLabel="Deposit to Elitra Account"
+        externalWalletAddress={walletAddress}
       />
     );
   }

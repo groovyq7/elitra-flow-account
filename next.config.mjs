@@ -16,6 +16,11 @@ const nextConfig = {
 
   async rewrites() {
     return [
+      // SpiceNet TX Submission API proxy — avoids CORS in dev and production
+      {
+        source: "/api/relayer/:path*",
+        destination: `${process.env.SPICENET_RELAYER_DESTINATION || "https://tx-submission-testnet.spicenet.io"}/:path*`,
+      },
       {
         source: "/relay-Lq2w/static/:path*",
         destination: "https://eu-assets.i.posthog.com/static/:path*",

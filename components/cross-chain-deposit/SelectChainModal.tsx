@@ -10,7 +10,7 @@ const SelectChainModalUI = dynamic(
 interface SelectChainModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onChainSelect?: (chainId: 11155111 | 84532 | 5115 | undefined) => void;
+  onChainSelect?: (chainId: number | undefined) => void;
   supportedChains?: number[];
   closeOnSelect?: boolean;
 }
@@ -19,10 +19,10 @@ export const SelectChainModal: React.FC<SelectChainModalProps> = ({
   isOpen,
   onClose,
   onChainSelect,
-  supportedChains = [11155111, 84532, 5115],
+  supportedChains = [11155111, 421614, 84532, 5115],
 }) => {
   const handleChainSelect = (chainIdStr: string) => {
-    const chainId = parseInt(chainIdStr, 10) as 11155111 | 84532 | 5115;
+    const chainId = parseInt(chainIdStr, 10);
     console.log('Chain selected from library:', chainId);
     onChainSelect?.(chainId);
   };

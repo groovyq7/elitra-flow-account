@@ -1,9 +1,9 @@
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Zap, Info } from "lucide-react";
+import { Zap, Info, ArrowDownToLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 interface VaultPositionCardProps {
   userAssetValue: number;
@@ -35,6 +35,18 @@ export function VaultPositionCard({
   isWithdrawing,
 }: VaultPositionCardProps) {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const { openSupply, crossChainBalance } = useSpiceStore();
+
+  const handleGaslessSupply = () => {
+    // Use the vault's underlying deposit token (wrappedAddress for native, or address for ERC20)
+    const depositAddress = vault.token0.wrappedAddress || vault.token0.address;
+    openSupply({
+      address: depositAddress,
+      symbol: vault.token0.symbol,
+      decimals: vault.token0.decimals,
+    });
+  };
+
   return (
     <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl p-6 border border-primary/20 hover:border-primary/30 transition-all duration-300">
       <div className="flex items-center justify-between md:flex-row flex-col gap-3">
@@ -104,6 +116,15 @@ export function VaultPositionCard({
               </div>
             </DialogContent>
           </Dialog>
+          {crossChainBalance > 0 && (
+            <Button
+              className="px-8 py-3 font-bold uppercase tracking-wider hover:scale-105 transition-transform duration-200 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 text-white"
+              onClick={handleGaslessSupply}
+            >
+              <ArrowDownToLine className="h-4 w-4 mr-2" />
+              Supply (Gasless)
+            </Button>
+          )}
           <Button
             variant="outline"
             className="px-8 py-3 font-bold uppercase tracking-wider border-2 hover:bg-foreground hover:text-background bg-transparent hover:scale-105 transition-all duration-200"

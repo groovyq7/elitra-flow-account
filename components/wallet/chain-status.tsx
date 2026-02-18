@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useChainId, useAccount, useSwitchChain } from "wagmi"
 import { supportedChains } from "@/lib/wagmi"
 import { getChainMetadata } from "@/lib/contracts/vault-registry"
@@ -12,7 +13,11 @@ export function ChainStatus() {
   const { isConnected } = useAccount()
   const { switchChain } = useSwitchChain()
 
-  if (!isConnected) return null
+  // Defer wallet-dependent UI until after hydration to prevent SSR mismatch
+  const [hasMounted, setHasMounted] = useState(false)
+  useEffect(() => { setHasMounted(true) }, [])
+
+  if (!hasMounted || !isConnected) return null
 
   const currentChain = supportedChains.find((chain) => chain.id === chainId)
   const chainMetadata = getChainMetadata(chainId)

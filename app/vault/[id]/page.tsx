@@ -32,30 +32,8 @@ import { getTokenBalance, getTokenPrice, getVaultRate } from "@/lib/utils/get-to
 import { Separator } from "@/components/ui/separator";
 import { getVaultByIdWithSubgraph } from "@/lib/contracts/vault-registry";
 import { GrowthChart } from "@/app/opportunities/components/GrowthChart";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const SpiceDepositModal = dynamic(
-  () =>
-    import("../../opportunities/components/SpiceDepositModal").then(
-      (mod) => mod.SpiceDepositModal
-    ),
-  { ssr: false }
-);
-
-const SpiceWithdrawModal = dynamic(
-  () =>
-    import("../../opportunities/components/SpiceWithdrawModal").then(
-      (mod) => mod.SpiceWithdrawModal
-    ),
-  { ssr: false }
-);
+import { ArrowDownToLine } from "lucide-react";
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 export default function VaultDetailsPage() {
   const params = useParams();
@@ -64,6 +42,7 @@ export default function VaultDetailsPage() {
   const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string | undefined>(undefined);
   const { address, isConnected } = useAccount();
   const { chains } = useConfig();
+  const { openDeposit, openSupply, openWithdraw, crossChainBalance } = useSpiceStore();
 
   useEffect(() => {
     const stored = sessionStorage.getItem('embeddedWalletAddress');
@@ -72,9 +51,7 @@ export default function VaultDetailsPage() {
     }
   }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<
-    "deposit" | "withdraw" | "spicedeposit" | "spicewithdraw-collateral" | "spicewithdraw-external"
-  >("deposit");
+  const [modalType, setModalType] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState("");
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
   const { data: vault, isLoading: vaultLoading } = useVaultDetails(vaultId);
@@ -202,7 +179,7 @@ export default function VaultDetailsPage() {
       setTokenRate(rateData.rate);
     }
     getUserPnl();
-  }, [isConnected, address, embeddedWalletAddress, vault, isModalOpen, vault?.id]);
+  }, [isConnected, address, embeddedWalletAddress, vault, isModalOpen]);
 
   useEffect(() => {
     if (!formattedTotalSupply || !tokenRate || !tokenPrice) return;
@@ -371,53 +348,34 @@ export default function VaultDetailsPage() {
                     <Button
                       className="rounded-md bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
                       onClick={() => {
-                        setModalType("spicedeposit");
-                        setSelectedToken(vault.token0);
-                        setIsModalOpen(true);
+                        openDeposit();
                       }}
                     >
                       Deposit
                     </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button className="rounded-md bg-gray-200 text-gray-800 text-xs font-semibold hover:bg-gray-300 transition-colors flex items-center gap-1">
-                          Withdraw
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setModalType("spicewithdraw-collateral");
-                            setSelectedToken({
-                              symbol: vault.symbol,
-                              address: vault.id,
-                              decimals: vault.decimals,
-                              name: vault.name,
-                            });
-                            setIsModalOpen(true);
-                          }}
-                          className="cursor-pointer py-2.5 px-4 text-sm"
-                        >
-                          Keep on Elitra
-                        </DropdownMenuItem>
-                        {/* <DropdownMenuItem
-                          onClick={() => {
-                            setModalType("spicewithdraw-external");
-                            setSelectedToken({
-                              symbol: vault.symbol,
-                              address: vault.id,
-                              decimals: vault.decimals,
-                              name: vault.name,
-                            });
-                            setIsModalOpen(true);
-                          }}
-                          className="cursor-pointer py-2.5 px-4 text-sm"
-                        >
-                          To external wallet
-                        </DropdownMenuItem> */}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {crossChainBalance > 0 && (
+                      <Button
+                        className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
+                        onClick={() => {
+                          openSupply({
+                            address: (vault.token0 as any).wrappedAddress || vault.token0.address,
+                            symbol: vault.token0.symbol,
+                            decimals: vault.token0.decimals,
+                          });
+                        }}
+                      >
+                        <ArrowDownToLine className="h-3 w-3" />
+                        Supply to Vault
+                      </Button>
+                    )}
+                    <Button
+                      className="rounded-md bg-gray-200 text-gray-800 text-xs font-semibold hover:bg-gray-300 transition-colors"
+                      onClick={() => {
+                        openWithdraw();
+                      }}
+                    >
+                      Withdraw
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -437,7 +395,19 @@ export default function VaultDetailsPage() {
         <div className="space-y-8 mt-8">
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <GrowthChart show initialBalance={Number(userPositionPnlInfo?.underlyingValueUSD) > 0 || Number(userShareBalance?.formatted) > 0 ? Number(userPositionPnlInfo?.underlyingValueUSD) || Number(userShareBalance?.formatted) * tokenPrice : Number(Number(userBalance?.formatted) * tokenPrice)} totalAPY={vaultData ? Number(vaultData?.apy) : Number(vault.apy || 6)} chartTimeframe={chartTimeframe} setChartTimeframe={setChartTimeframe} fullWidth={false} isActive={Number(userPositionPnlInfo?.underlyingValue) > 0 || Number(userShareBalance?.formatted) > 0} />
+            <GrowthChart
+              show
+              initialBalance={
+                Number(userPositionPnlInfo?.underlyingValueUSD) > 0 || Number(userShareBalance?.formatted) > 0
+                  ? Number(userPositionPnlInfo?.underlyingValueUSD) || Number(userShareBalance?.formatted) * tokenPrice
+                  : Number(Number(userBalance?.formatted) * tokenPrice)
+              }
+              totalAPY={vaultData ? Number(vaultData?.apy) : Number(vault.apy || 6)}
+              chartTimeframe={chartTimeframe}
+              setChartTimeframe={setChartTimeframe}
+              fullWidth={false}
+              isActive={Number(userPositionPnlInfo?.underlyingValue) > 0 || Number(userShareBalance?.formatted) > 0}
+            />
             {/* <Card className="bg-card border-border pb-20 pt-8 px-4 hover:border-primary/20 transition-all duration-300 hover:shadow-lg">
                <ApyChart initialApy={vaultData ? Number(vaultData?.apy) : 6} />
              </Card> */}
@@ -567,42 +537,6 @@ export default function VaultDetailsPage() {
               setSelectedToken={setSelectedToken}
               isTokenSelectorOpen={isTokenSelectorOpen}
               setIsTokenSelectorOpen={setIsTokenSelectorOpen}
-            />
-          )}
-
-          {/* Spice Deposit Modal */}
-          {isModalOpen && modalType === "spicedeposit" && (
-            <SpiceDepositModal
-              open={isModalOpen && modalType === "spicedeposit"}
-              onOpenChange={setIsModalOpen}
-              tokenSymbol={selectedToken?.symbol || vault.token0.symbol}
-              yieldPercentage={
-                vaultData ? Number(vaultData?.apy) : vault && Number(vault.apy)
-              }
-            />
-          )}
-
-          {/* Spice Withdraw Modal – cross-chain collateral */}
-          {isModalOpen && modalType === "spicewithdraw-collateral" && (
-            <SpiceWithdrawModal
-              open={isModalOpen && modalType === "spicewithdraw-collateral"}
-              onOpenChange={setIsModalOpen}
-              tokenSymbol={selectedToken?.symbol || vault.symbol}
-              externalWalletAddress={address as `0x${string}`}
-              embeddedWalletAddress={embeddedWalletAddress as `0x${string}`}
-              destination="collateral"
-            />
-          )}
-
-          {/* Spice Withdraw Modal – external wallet (with chain selector) */}
-          {isModalOpen && modalType === "spicewithdraw-external" && (
-            <SpiceWithdrawModal
-              open={isModalOpen && modalType === "spicewithdraw-external"}
-              onOpenChange={setIsModalOpen}
-              tokenSymbol={selectedToken?.symbol || vault.symbol}
-              externalWalletAddress={address as `0x${string}`}
-              embeddedWalletAddress={embeddedWalletAddress as `0x${string}`}
-              destination="external"
             />
           )}
 

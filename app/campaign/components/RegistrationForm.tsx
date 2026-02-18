@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "react-hot-toast";
@@ -23,6 +23,11 @@ export function RegistrationForm() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isConnected, address } = useAccount();
+
+  // Defer wallet-dependent UI until after hydration to prevent SSR mismatch
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+  const clientConnected = hasMounted && isConnected;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -210,12 +215,12 @@ export function RegistrationForm() {
             <div>
               <p className="font-semibold text-gray-900">Wallet Connection</p>
               <p className="text-sm text-gray-600">
-                {isConnected
+                {clientConnected
                   ? `Connected: ${address?.slice(0, 6)}...${address?.slice(-4)}`
                   : "Connect your wallet to continue"}
               </p>
             </div>
-            {!isConnected && (
+            {!clientConnected && (
               <button className="text-base font-semibold cursor-pointer text-primary">
                 <WalletConnectButton />
               </button>
@@ -237,7 +242,7 @@ export function RegistrationForm() {
             onClick={handleSubmit}
             disabled={
               isSubmitting ||
-              !isConnected ||
+              !clientConnected ||
               !formData.xUsername ||
               !formData.telegram
             }

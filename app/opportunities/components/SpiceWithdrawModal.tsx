@@ -79,7 +79,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     destination === "external" && selectedChainId != null;
 
   const withdrawBatches = useMemo((): ChainBatch[] => {
-    if (!tokenAddress) return [];
+    if (!tokenAddress || !embeddedWalletAddress || !externalWalletAddress) return [];
     const addresses = getAddresses(5115, tokenSymbol);
     if (!addresses?.tellerAddress) return [];
 
@@ -146,7 +146,13 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     externalWalletAddress,
   ]);
 
-  const handleClose = () => {
+  // Cancel — closes modal without side effects
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
+
+  // Complete — fires event only on successful withdrawal
+  const handleComplete = () => {
     window.dispatchEvent(new CustomEvent("crosschain-withdraw-complete", { detail: { tokenSymbol } }));
     onOpenChange(false);
   };
@@ -164,7 +170,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     return (
       <SelectChainModal
         isOpen={open}
-        onClose={handleClose}
+        onClose={handleCancel}
         onChainSelect={handleChainSelect}
         supportedChains={SUPPORTED_CHAINS}
         closeOnSelect={false}
@@ -175,10 +181,10 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
   const isCollateral = destination === "collateral";
   const withdrawMode = isCollateral ? "embedded" : "external";
   const title = isCollateral
-    ? `Withdraw ${tokenSymbol} to Spice balance`
+    ? `Withdraw ${tokenSymbol} to Elitra Account`
     : `Withdraw ${tokenSymbol} to external wallet`;
   const description = isCollateral
-    ? "Withdraw vault shares to your cross-chain balance (Spice balance)."
+    ? "Withdraw vault shares to your Elitra Account balance."
     : `Withdraw vault shares to your external wallet. You will receive WBTC on ${selectedChainId != null ? getChainConfig(selectedChainId)?.displayName ?? `chain ${selectedChainId}` : "Citrea"}.`;
 
   const WithdrawWidgetModalAny = WithdrawWidgetModal as any;
@@ -186,8 +192,8 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
   return (
     <WithdrawWidgetModalAny
       isOpen={open}
-      onClose={handleClose}
-      onComplete={handleClose}
+      onClose={handleCancel}
+      onComplete={handleComplete}
       title={title}
       description={description}
       withdrawBatches={withdrawBatches}

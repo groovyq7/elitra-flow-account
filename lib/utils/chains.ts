@@ -105,6 +105,43 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
     ],
   },
 
+  // Arbitrum Sepolia
+  421614: {
+    id: 421614,
+    name: "Arbitrum Sepolia",
+    displayName: "Arbitrum Sepolia",
+    shortName: "ARB_SEPOLIA",
+    isTestnet: true,
+    nativeCurrency: {
+      name: "Sepolia Ether",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+    blockExplorers: {
+      default: {
+        name: "Arbiscan",
+        url: "https://sepolia.arbiscan.io",
+      },
+    },
+    viemChain: arbitrumSepolia,
+    delegateContract: "0x151755d1bdFeB6082D141EF86e4291b2e902b43F",
+    icon: {
+      symbol: "A",
+      backgroundColor: "#28A0F0",
+      textColor: "#FFFFFF",
+    },
+    moralisName: "",
+    supportedTokens: [
+      {
+        address: "0xBA4c54d4CF10C766c22A08F783998cFaB237F7C9",
+        name: "Wrapped Bitcoin",
+        symbol: "WBTC",
+        decimals: 8,
+      },
+    ],
+  },
+
   // Base Sepolia
   84532: {
     id: 84532,

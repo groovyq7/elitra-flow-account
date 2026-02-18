@@ -1,13 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   formatAPY,
   formatCurrency,
@@ -20,6 +13,7 @@ import { computePositionPnL } from "@/lib/utils/pnl";
 import { getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
 import { UserPnlInfo } from "@/lib/types";
 import { trackModalOpen } from "@/lib/analytics";
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 export function DepositedAssetsTable({
   tokenInfos,
@@ -33,11 +27,18 @@ export function DepositedAssetsTable({
   availableVaults: any[];
   fullWidth?: boolean;
   setSelectedToken: (token: any) => void;
-  setModalType: (type: "deposit" | "spicedeposit" | "spicewithdraw-collateral" | "spicewithdraw-external") => void;
+  setModalType: (type: "deposit") => void;
   setIsModalOpen: (isOpen: boolean) => void;
 }) {
   const { isConnected, address } = useAccount();
   const chain = useConfig().getClient().chain;
+  const { openWithdraw } = useSpiceStore();
+
+  // Defer wallet-dependent UI until after hydration to prevent SSR mismatch
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+  const clientConnected = hasMounted && isConnected;
+
   const [userPositionPnlInfo, setUserPositionPnlInfo] =
     useState<Record<string, UserPnlInfo>>();
 
@@ -51,17 +52,11 @@ export function DepositedAssetsTable({
   }, []);
 
   useEffect(() => {
-    console.log("Token infos updated:", tokenInfos);
     async function getUserPnl() {
       if (!isConnected || !address) return;
 
       const pnl: Record<string, UserPnlInfo> = {};
       for (const token of tokenInfos) {
-        const { data } = await getUserVaultPositionFromSubgraph(
-          address,
-          token.token.address
-        );
-
         const [externalData, embeddedData] = await Promise.all([
           getUserVaultPositionFromSubgraph(address, token.token.address),
           embeddedWalletAddress
@@ -78,17 +73,19 @@ export function DepositedAssetsTable({
         const combinedCostBasis =
           (externalData?.data?.costBasis || BigInt(0)) +
           (embeddedData?.data?.costBasis || BigInt(0));
+        const combinedRealizedPnL =
+          (externalData?.data?.realizedPnL || BigInt(0)) +
+          (embeddedData?.data?.realizedPnL || BigInt(0));
 
         const rateData = await getVaultRate(token.token.symbol, chain);
 
         const userPnlData = computePositionPnL({
-          shareBalance: data?.currentShareBalance || BigInt(0),
-          costBasis: data?.costBasis || BigInt(0),
-          realizedPnL: data?.realizedPnL || BigInt(0),
+          shareBalance: combinedShareBalance,
+          costBasis: combinedCostBasis,
+          realizedPnL: combinedRealizedPnL,
           rate: rateData.rateRaw || BigInt(0),
           assetDecimals: 18,
         });
-        console.log(`Computed PnL for ${token.token.symbol}:`, userPnlData);
         const price = await getTokenPrice(token.token.symbol);
         pnl[token.token.symbol] = {
           pnl: formatPrice(Number(userPnlData.unrealizedPnL)),
@@ -110,7 +107,7 @@ export function DepositedAssetsTable({
       setUserPositionPnlInfo(pnl);
     }
     getUserPnl();
-  }, [isConnected, address, tokenInfos]);
+  }, [isConnected, address, embeddedWalletAddress, tokenInfos]);
 
   return (
     <div className="overflow-auto">
@@ -133,7 +130,7 @@ export function DepositedAssetsTable({
             </tr>
           </thead>
           <tbody>
-            {!isConnected && (
+            {!clientConnected && (
               <tr>
                 <td colSpan={5} className="py-4 text-left">
                   Please connect your wallet to estimate.
@@ -184,46 +181,19 @@ export function DepositedAssetsTable({
                     </td>
                     <td className="py-2 px-2 text-right">
                       <div className="font-medium flex gap-2 items-center justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 flex items-center gap-1">
-                              Withdraw
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setModalType("spicewithdraw-collateral");
-                                setSelectedToken(token.token);
-                                setIsModalOpen(true);
-                                trackModalOpen("spicewithdraw", {
-                                  source: "deposited_table",
-                                  token: token.symbol,
-                                  to: "collateral",
-                                });
-                              }}
-                              className="cursor-pointer py-2.5 px-4 text-sm"
-                            >
-                              Keep on Elitra
-                            </DropdownMenuItem>
-                            {/* <DropdownMenuItem
-                              onClick={() => {
-                                setModalType("spicewithdraw-external");
-                                setSelectedToken(token.token);
-                                setIsModalOpen(true);
-                                trackModalOpen("spicewithdraw", {
-                                  source: "deposited_table",
-                                  token: token.symbol,
-                                  to: "external",
-                                });
-                              }}
-                              className="cursor-pointer py-2.5 px-4 text-sm"
-                            >
-                              To external wallet
-                            </DropdownMenuItem> */}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button
+                          className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+                          onClick={() => {
+                            openWithdraw();
+                            trackModalOpen("spicewithdraw", {
+                              source: "deposited_table",
+                              token: token.symbol,
+                              to: "collateral",
+                            });
+                          }}
+                        >
+                          Withdraw
+                        </Button>
 
                         <Link
                           href={`/vault/${token?.token.address}`}

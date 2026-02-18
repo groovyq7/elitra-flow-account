@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Info } from "lucide-react";
+import { Info, ArrowDownToLine } from "lucide-react";
 import {
   formatAPY,
   formatCurrency,
@@ -20,6 +20,7 @@ import {
   useSpiceAssets,
 } from "@spicenet-io/spiceflow-ui";
 import { getTargetAddresses } from "@/lib/utils/chains";
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
@@ -35,10 +36,16 @@ export function AvailableAssetsTable({
   availableVaults: any[];
   fullWidth?: boolean;
   setSelectedToken: (token: any) => void;
-  setModalType: (type: "deposit" | "spicedeposit" | "spicewithdraw-collateral" | "spicewithdraw-external") => void;
+  setModalType: (type: "deposit") => void;
   setIsModalOpen: (isOpen: boolean) => void;
 }) {
   const { isConnected } = useAccount();
+  const { openDeposit, openSupply, crossChainBalance } = useSpiceStore();
+
+  // Defer wallet-dependent UI until after hydration to prevent SSR mismatch
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => { setHasMounted(true); }, []);
+  const clientConnected = hasMounted && isConnected;
 
   const [embeddedWalletAddress, setEmbeddedWalletAddress] = useState<string | undefined>(undefined);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -82,7 +89,6 @@ export function AvailableAssetsTable({
       targetAddresses = [...targetAddresses, ...getTargetAddresses("WCBTC")];
     }
 
-    console.log("xxxxxxxxtargetAddresses", targetAddresses);
     return assets
       .filter((asset) => targetAddresses.includes(asset.address.toLowerCase()))
       .reduce((sum, asset) => sum + asset.balanceFormatted, 0) || 0;
@@ -113,7 +119,7 @@ export function AvailableAssetsTable({
             </tr>
           </thead>
           <tbody>
-            {!isConnected && (
+            {!clientConnected && (
               <tr>
                 <td
                   colSpan={5}
@@ -162,7 +168,7 @@ export function AvailableAssetsTable({
                             onMouseLeave={() => setOpenDropdownId(null)}>
                             <div className="px-3 py-2 text-xs space-y-1.5">
                               <div className="flex justify-between gap-4">
-                                <span className="text-muted-foreground">Cross-Chain:</span>
+                                <span className="text-muted-foreground">Elitra Account:</span>
                                 <span className="font-medium">
                                   {assetsLoading && assets.length === 0
                                     ? "..."
@@ -203,18 +209,36 @@ export function AvailableAssetsTable({
                           <Button
                             className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 flex items-center gap-1"
                             onClick={() => {
-                              setModalType("spicedeposit");
-                              setSelectedToken(token.token);
-                              setIsModalOpen(true);
-                              trackModalOpen("spicedeposit", {
+                              openDeposit();
+                              trackModalOpen("deposit_to_account", {
                                 source: "available_table",
                                 token: token.symbol,
                               });
                             }}
                           >
-                            Earn Yield
-                            <ChevronDown className="h-3 w-3" />
+                            Deposit
                           </Button>
+
+                          {crossChainBalance > 0 && (
+                            <Button
+                              className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 transition-all duration-200 flex items-center gap-1"
+                              onClick={() => {
+                                const depositAddress = token.token.wrappedAddress || token.token.address;
+                                openSupply({
+                                  address: depositAddress,
+                                  symbol: token.symbol,
+                                  decimals: token.token.decimals,
+                                });
+                                trackModalOpen("gasless_supply", {
+                                  source: "available_table",
+                                  token: token.symbol,
+                                });
+                              }}
+                            >
+                              <ArrowDownToLine className="h-3 w-3" />
+                              Supply
+                            </Button>
+                          )}
 
                           <Link
                             href={`/vault/${vault.id}`}
