@@ -248,7 +248,7 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK type mismatch
-  const DepositWidgetModalAny = DepositWidgetModal as React.ComponentType<Record<string, unknown>>;
+  const DepositWidgetModalAny = DepositWidgetModal as unknown as React.ComponentType<Record<string, unknown>>;
 
   // Step 3: Vault deposit via 7702 using DepositWidgetModal
   // This deposits from cross-chain balance into the Elitra vault

@@ -25,11 +25,14 @@ const SupplyViaSpiceFlow = dynamic(
 /**
  * Error boundary that catches SDK component crashes and renders nothing
  * instead of taking down the entire app. Logs the error for debugging.
+ * Automatically resets after 5 seconds so the modal can be reopened.
  */
 class SdkErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean }
 > {
+  private resetTimer: ReturnType<typeof setTimeout> | null = null;
+
   constructor(props: { children: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
@@ -41,6 +44,14 @@ class SdkErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("[SdkErrorBoundary] SDK component crashed:", error, info.componentStack);
+    // Auto-reset after 5 seconds so the user can retry
+    this.resetTimer = setTimeout(() => {
+      this.setState({ hasError: false });
+    }, 5000);
+  }
+
+  componentWillUnmount() {
+    if (this.resetTimer) clearTimeout(this.resetTimer);
   }
 
   render() {

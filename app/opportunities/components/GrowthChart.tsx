@@ -24,8 +24,6 @@ export function GrowthChart({
   fullWidth?: boolean;
   isActive?: boolean;
 }) {
-  if (!show) return null;
-
   const chartData = useMemo(() => {
       const stakingData = generateCurvedChartData(
         new Date().toISOString().slice(0, 10),
@@ -111,6 +109,8 @@ export function GrowthChart({
         staking: staking.value,
       }));
     }, [initialBalance, totalAPY]);
+
+  if (!show) return null;
 
   return (
   <Card className={`bg-white border border-gray-200 shadow-md h-full ${fullWidth ? "w-full" : ""}`}>

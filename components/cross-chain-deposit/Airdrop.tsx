@@ -22,7 +22,7 @@ export const AirdropModal: React.FC<AirdropModalProps> = ({
     externalWalletAddress,
 }) => {
 
-    if (!isOpen) return null;
+    if (!isOpen || !chainId) return null;
 
     return (
         <AirdropModalUI

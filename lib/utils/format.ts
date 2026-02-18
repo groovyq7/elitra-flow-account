@@ -1,6 +1,7 @@
 export function formatTokenAmount(amount: bigint | number | string, decimals = 18, displayDecimals = 6): string {
   const value = typeof amount === "bigint" ? Number(amount) / Math.pow(10, decimals) : Number(amount);
 
+  if (isNaN(value) || !isFinite(value)) return "0";
   if (value === 0) return "0";
   if (value < 0.000001) return "<0.000001";
 
@@ -13,8 +14,10 @@ export function formatTokenAmount(amount: bigint | number | string, decimals = 1
   }).format(value);
 }
 
-export function formatAPY(apy: number): string {
-  return `${(Number(apy)).toFixed(2)}%`
+export function formatAPY(apy: number | string): string {
+  const val = Number(apy);
+  if (isNaN(val) || !isFinite(val)) return "0.00%";
+  return `${val.toFixed(2)}%`
 }
 
 export function formatTVL(tvl: number): string {
@@ -37,12 +40,13 @@ export function shortenAddress(address: string, chars = 4): string {
 }
 
 export function formatSharePrice(price: number): string {
+  if (isNaN(price) || !isFinite(price)) return "0.000000";
   return price.toFixed(6)
 }
 
 export function formatCurrency(amount: number | string): string {
   const numericAmount = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (numericAmount === 0) return "$0.00"
+  if (!numericAmount || isNaN(numericAmount) || !isFinite(numericAmount)) return "$0.00"
 
   if (numericAmount >= 1_000_000_000) {
     return `$${(numericAmount / 1_000_000_000).toFixed(2)}B`
@@ -63,7 +67,9 @@ export function formatCurrency(amount: number | string): string {
 }
 
 export function formatPercentage(percentage: number | string): string {
-  return `${Number(percentage).toFixed(2)}%`
+  const val = Number(percentage);
+  if (isNaN(val) || !isFinite(val)) return "0.00%";
+  return `${val.toFixed(2)}%`
 }
 
 

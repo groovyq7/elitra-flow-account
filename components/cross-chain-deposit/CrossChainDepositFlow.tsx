@@ -49,10 +49,10 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   const chainSelectedRef = useRef(false);
 
   const handleChainSelect = useCallback(
-    (chainId: SupportedChainId | undefined) => {
+    (chainId: number | undefined) => {
       console.log("Chain selected:", chainId);
       chainSelectedRef.current = true;
-      setSelectedChainId(chainId);
+      setSelectedChainId(chainId as SupportedChainId | undefined);
       setCurrentStep("provider-login");
       loginTriggeredRef.current = false;
       completedRef.current = false;

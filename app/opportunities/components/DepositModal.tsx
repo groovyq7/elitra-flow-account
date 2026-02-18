@@ -87,8 +87,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         const res: any = await getVaultRate(selectedVault.symbol, currentChain);
         const priceData: any = await getTokenPrice(selectedVault.token0.symbol);
         // res.rate may be a formatted decimal string or bigint depending on util implementation
-        let rateBigInt: bigint | null = null;
-        rateBigInt = res.rateRaw;
+        const rateBigInt: bigint = res.rateRaw ?? 0n;
         setTokenPrice(priceData.price);
         if (!cancelled) setVaultRate({raw: rateBigInt, formatted: res.rate });
       } catch (e) {
@@ -120,7 +119,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
       };
     }
 
-    if (!selectedVault || !vaultRate) {
+    if (!selectedVault || !vaultRate || !vaultRate.raw) {
       return {
         estimatedShares: BigInt(0),
         minAmount: BigInt(0),

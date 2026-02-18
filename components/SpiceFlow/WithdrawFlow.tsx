@@ -237,7 +237,7 @@ export const WithdrawFlow: React.FC = () => {
   const description = `Withdraw vault shares to your external wallet. You will receive WBTC on ${chainName}.`;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK type mismatch
-  const WithdrawWidgetModalAny = WithdrawWidgetModal as React.ComponentType<Record<string, unknown>>;
+  const WithdrawWidgetModalAny = WithdrawWidgetModal as unknown as React.ComponentType<Record<string, unknown>>;
 
   return (
     <WithdrawWidgetModalAny

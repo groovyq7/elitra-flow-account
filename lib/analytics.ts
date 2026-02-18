@@ -30,7 +30,7 @@ export function trackPageView(pathname: string, search: string) {
 }
 
 // Modals & UI
-export function trackModalOpen(modal: 'deposit' | 'withdraw' | 'spicedeposit' | 'spicewithdraw' | 'token-selector', properties?: Dict) {
+export function trackModalOpen(modal: 'deposit' | 'withdraw' | 'spicedeposit' | 'spicewithdraw' | 'token-selector' | 'deposit_to_account' | 'gasless_supply', properties?: Dict) {
   safeCapture('modal_open', { modal, ...(properties || {}) })
 }
 

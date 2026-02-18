@@ -79,9 +79,9 @@ export class VaultSDK {
   }
 
   // Utility Methods
-  calculateSharePrice(vault: Vault): number {
-    if (vault.totalSupply === BigInt(0)) return 1
-    return Number(vault.totalAssets) / Number(vault.totalSupply)
+  calculateSharePrice(vault: Vault & { totalSupply?: bigint; totalAssets?: bigint }): number {
+    if (!vault.totalSupply || vault.totalSupply === BigInt(0)) return 1
+    return Number(vault.totalAssets ?? 0n) / Number(vault.totalSupply)
   }
 
   calculateUserValue(position: UserPosition): number {

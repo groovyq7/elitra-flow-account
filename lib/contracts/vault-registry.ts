@@ -272,7 +272,7 @@ export async function getVaultsByChainWithSubgraph(
         const m = metricsById[v.id.toLowerCase()];
         let apy24h = 0;
         if (m?.rateSnapshots && m.rateSnapshots.length > 1) {
-          apy24h = computeApy24hLinear(m.rateSnapshots).apy;
+          apy24h = Number(computeApy24hLinear(m.rateSnapshots).apy ?? 0);
         } else {
           const wrappedAddress = v.token0.wrapped?.address ?? v.token0.wrappedAddress;
           if (wrappedAddress) {
@@ -379,7 +379,7 @@ export async function getVaultByIdWithSubgraph(
     const m = data?.Vault?.[0];
     let apy24h = 0;
     if (m?.rateSnapshots && m.rateSnapshots.length > 1) {
-      apy24h = computeApy24hLinear(m.rateSnapshots).apy;
+      apy24h = Number(computeApy24hLinear(m.rateSnapshots).apy ?? 0);
     } else {
       const wrappedAddress = base.token0.wrapped?.address ?? base.token0.wrappedAddress;
       if (wrappedAddress) {

@@ -3,8 +3,9 @@ import React from "react";
 import dynamic from 'next/dynamic';
 import { getChainConfig, getSupportedTokens } from "@/lib/utils/chains";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK type mismatch with dynamic import
 const CrossChainDepositModalUI = dynamic(
-  () => import("@spicenet-io/spiceflow-ui").then((mod) => mod.CrossChainDepositModal),
+  () => import("@spicenet-io/spiceflow-ui").then((mod) => mod.CrossChainDepositModal) as any,
   { ssr: false }
 ) as React.ComponentType<Record<string, unknown>>;
 

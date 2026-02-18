@@ -4,14 +4,7 @@ import { getTokenImage } from "@/lib/utils";
 import React from "react";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { trackModalOpen, trackTokenSelected } from '@/lib/analytics'
-
-interface TokenType {
-  symbol: string;
-  address: string;
-  decimals: number;
-  name?: string;
-  [key: string]: any;
-}
+import { TokenType } from "@/lib/types";
 
 interface TokenSelectorModalProps {
   open: boolean;

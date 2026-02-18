@@ -182,6 +182,6 @@ export const CrossChainAccountPopup: React.FC = () => {
         </button>
       </div>
       </div>{/* end overflow-hidden card */}
-    </div>{/* end relative outer wrapper */}
+    </div>
   );
 };

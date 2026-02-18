@@ -89,7 +89,7 @@ export default function VaultDetailsPage() {
 
   const calculateInvestment = () => {
     const returns = vault
-      ? calculateReturns(investmentAmount, Number(vaultData?.apy))
+      ? calculateReturns(investmentAmount, Number(vaultData?.apy || vault.apy) || 0)
       : { annual: 0, monthly: 0, fiveYear: 0 };
     setReturns(returns);
   }
@@ -177,7 +177,7 @@ export default function VaultDetailsPage() {
       setUserShareBalance({ formatted: Number(externalShareBalance.formatted) + Number(embeddedShareBalance.formatted) });
       setUserPositionPnlInfo(combinedPnl);
       setTokenPrice(price.price);
-      setTokenRate(rateData.rate);
+      setTokenRate(Number(rateData.rate));
     }
     getUserPnl();
   // Note: isModalOpen was removed from deps — it's dead state (never toggled by
@@ -310,7 +310,7 @@ export default function VaultDetailsPage() {
                   //   ? "text-red-500"
                   //   : "text-muted-foreground";
 
-                  if (!userPositionPnlInfo?.depositedUSD && !userPositionPnlInfo?.underlyingValueUSD && userShareBalance?.formatted === "0") {
+                  if (!userPositionPnlInfo?.depositedUSD && !userPositionPnlInfo?.underlyingValueUSD && (userShareBalance?.formatted ?? 0) === 0) {
                     return (
                       <div className="text-sm text-muted-foreground">
                         You have no position in this vault yet. Deposit to get
@@ -329,12 +329,12 @@ export default function VaultDetailsPage() {
                           <span className="text-lg font-semibold text-foreground">
                             $
                             {formatPrice(
-                              Number(userPositionPnlInfo?.underlyingValue) > 0 ? Number(userPositionPnlInfo?.underlyingValue) * tokenPrice : userShareBalance?.formatted * tokenPrice
+                              Number(userPositionPnlInfo?.underlyingValue) > 0 ? Number(userPositionPnlInfo?.underlyingValue) * (tokenPrice ?? 0) : (userShareBalance?.formatted ?? 0) * (tokenPrice ?? 0)
                             )}
                           </span>
                           <span className="text-sm text-foreground">
                             {formatPrice(
-                              Number(userPositionPnlInfo?.underlyingValue) > 0 ? userPositionPnlInfo?.underlyingValue : userShareBalance?.formatted
+                              Number(userPositionPnlInfo?.underlyingValue) > 0 ? userPositionPnlInfo?.underlyingValue : (userShareBalance?.formatted ?? 0)
                             )}{" "}
                             {vault.token0.symbol}
                           </span>
@@ -426,14 +426,14 @@ export default function VaultDetailsPage() {
               show
               initialBalance={
                 Number(userPositionPnlInfo?.underlyingValueUSD) > 0 || Number(userShareBalance?.formatted) > 0
-                  ? Number(userPositionPnlInfo?.underlyingValueUSD) || Number(userShareBalance?.formatted) * tokenPrice
-                  : Number(Number(userBalance?.formatted) * tokenPrice)
+                  ? Number(userPositionPnlInfo?.underlyingValueUSD) || Number(userShareBalance?.formatted ?? 0) * (tokenPrice ?? 0)
+                  : Number(Number(userBalance?.formatted ?? 0) * (tokenPrice ?? 0))
               }
               totalAPY={vaultData ? Number(vaultData?.apy) : Number(vault.apy || 6)}
               chartTimeframe={chartTimeframe}
               setChartTimeframe={setChartTimeframe}
               fullWidth={false}
-              isActive={Number(userPositionPnlInfo?.underlyingValue) > 0 || Number(userShareBalance?.formatted) > 0}
+              isActive={Number(userPositionPnlInfo?.underlyingValue) > 0 || Number(userShareBalance?.formatted ?? 0) > 0}
             />
             {/* <Card className="bg-card border-border pb-20 pt-8 px-4 hover:border-primary/20 transition-all duration-300 hover:shadow-lg">
                <ApyChart initialApy={vaultData ? Number(vaultData?.apy) : 6} />
@@ -529,8 +529,8 @@ export default function VaultDetailsPage() {
             <VaultBreakdownChart
               vault={vault}
               totalSupply={Number(formattedTotalSupply)}
-              rate={tokenRate}
-              price={tokenPrice}
+              rate={tokenRate ?? 0}
+              price={tokenPrice ?? 0}
               breakdown={vault.breakdown}
               strategy={vault?.strategyDescription || ""}
               totalTvl={
@@ -541,7 +541,7 @@ export default function VaultDetailsPage() {
           )}
 
           {/* Deposit/Withdraw Modal */}
-          {isModalOpen && modalType === "deposit" && (
+          {isModalOpen && modalType === "deposit" && selectedToken && (
             <DepositModal
               open={isModalOpen && modalType === "deposit"}
               onOpenChange={setIsModalOpen}
@@ -556,7 +556,7 @@ export default function VaultDetailsPage() {
           )}
 
           {/* Deposit/Withdraw Modal */}
-          {isModalOpen && modalType === "withdraw" && (
+          {isModalOpen && modalType === "withdraw" && selectedToken && (
             <WithdrawModal
               open={isModalOpen && modalType === "withdraw"}
               onOpenChange={setIsModalOpen}
@@ -570,24 +570,26 @@ export default function VaultDetailsPage() {
           )}
 
           {/* Token Selector Modal */}
-          <TokenSelectorModal
-            open={isTokenSelectorOpen}
-            onOpenChange={setIsTokenSelectorOpen}
-            selectedToken={selectedToken}
-            setSelectedToken={setSelectedToken}
-            tokens={
-              modalType === "deposit"
-                ? [vault.token0]
-                : [
-                  {
-                    symbol: vault.symbol,
-                    address: vault.id,
-                    decimals: vault.decimals,
-                    name: vault.name,
-                  },
-                ]
-            }
-          />
+          {selectedToken && (
+            <TokenSelectorModal
+              open={isTokenSelectorOpen}
+              onOpenChange={setIsTokenSelectorOpen}
+              selectedToken={selectedToken}
+              setSelectedToken={setSelectedToken}
+              tokens={
+                modalType === "deposit"
+                  ? [vault.token0]
+                  : [
+                    {
+                      symbol: vault.symbol,
+                      address: vault.id,
+                      decimals: vault.decimals,
+                      name: vault.name,
+                    },
+                  ]
+              }
+            />
+          )}
         </div>
       </div>
     </div>

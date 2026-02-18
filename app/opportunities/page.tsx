@@ -92,9 +92,9 @@ export default function OpportunitiesPage() {
   // Inside your component, add this memoized chart data:
   const totalAPY = useMemo(() => calculateTotalAPY(tokenInfos), [tokenInfos]);
   const initialBalance =
-    (portfolioData?.depositedAmountUSD > 0
-      ? portfolioData.depositedAmountUSD
-      : portfolioData?.totalBalance) || 1000;
+    ((portfolioData?.depositedAmountUSD ?? 0) > 0
+      ? (portfolioData?.depositedAmountUSD ?? 0)
+      : (portfolioData?.totalBalance ?? 0)) || 1000;
 
   const [showPortfolioOverview, setShowPortfolioOverview] = useState(true);
   const [showGrowthChart, setShowGrowthChart] = useState(true);
@@ -302,9 +302,8 @@ export default function OpportunitiesPage() {
 
   useEffect(() => {
     if (depositTokens.length > 0 && selectedToken.address === "0xusdc") {
-      setSelectedToken(
-        modalType === "deposit" ? depositTokens[0] : withdrawTokens[0]
-      );
+      const token = modalType === "deposit" ? depositTokens[0] : withdrawTokens[0];
+      if (token) setSelectedToken(token);
     }
   }, [depositTokens, withdrawTokens]);
 
@@ -352,7 +351,7 @@ export default function OpportunitiesPage() {
                     />
                   </button>
                   <span>Active Assets</span>
-                  {chain.testnet && (
+                  {chain?.testnet && (
                     <Badge variant="outline" className="">
                       Testnet
                     </Badge>
@@ -675,7 +674,7 @@ export default function OpportunitiesPage() {
           >
             <div
               className={
-                clientConnected && portfolioData?.totalBalance > 0
+                clientConnected && (portfolioData?.totalBalance ?? 0) > 0
                   ? ""
                   : "filter blur-sm pointer-events-none select-none"
               }
@@ -687,7 +686,7 @@ export default function OpportunitiesPage() {
                 initialBalance={initialBalance}
                 totalAPY={totalAPY}
                 fullWidth={!showPortfolioOverview}
-                isActive={portfolioData?.depositedAmountUSD > 0}
+                isActive={(portfolioData?.depositedAmountUSD ?? 0) > 0}
               />
             </div>
             {(!clientConnected || portfolioData?.totalBalance === 0) && (
