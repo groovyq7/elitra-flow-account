@@ -56,13 +56,12 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
   const [tokenAddress, setTokenAddress] = useState<`0x${string}`>();
   const withdrawInput = useAssetInput();
 
+  // Reset state when modal opens to ensure clean state on every open.
+  // Previously a delayed reset on close, which races with rapid close→reopen.
   useEffect(() => {
-    if (!open) {
-      const timer = setTimeout(() => {
-        setStep(destination === "external" ? "chain-select" : "withdraw");
-        setSelectedChainId(null);
-      }, 200);
-      return () => clearTimeout(timer);
+    if (open) {
+      setStep(destination === "external" ? "chain-select" : "withdraw");
+      setSelectedChainId(null);
     }
   }, [open, destination]);
 
