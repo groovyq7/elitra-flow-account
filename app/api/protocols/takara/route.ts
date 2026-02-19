@@ -6,6 +6,7 @@
  */
 import { NextResponse } from "next/server";
 import { getCached, setCached } from "@/lib/utils/simple-api-cache";
+import { createRateLimiter } from "@/lib/utils/rate-limit";
 import { createPublicClient, http } from "viem";
 import { sei } from "viem/chains";
 import takaraMarketAbi from "../../../../lib/abis/TakaraMarketState.json";
@@ -184,7 +185,18 @@ export async function fetchTakaraData(
   return results;
 }
 
+// 30 requests / minute per IP. This route calls the Sei mainnet RPC to read
+// on-chain APY data; rate limiting prevents RPC node abuse.
+const takaraRateLimiter = createRateLimiter({ maxRequests: 30, windowMs: 60_000 });
+
 export async function GET(req: Request) {
+  const ip =
+    (req.headers as Headers).get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown";
+  if (takaraRateLimiter.isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const url = new URL(req.url);
     const vaultIdParam = url.searchParams.get("vaultId");

@@ -6,6 +6,7 @@
  */
 import { NextResponse } from 'next/server';
 import { getCached, setCached } from "@/lib/utils/simple-api-cache";
+import { createRateLimiter } from "@/lib/utils/rate-limit";
 import { createPublicClient, http } from 'viem';
 import { sei } from 'viem/chains';
 import yeiMarketAbi from '../../../../lib/abis/YeiMarket.json';
@@ -129,7 +130,18 @@ export async function fetchYeiData(
   return results;
 }
 
+// 30 requests / minute per IP. This route calls the Sei mainnet RPC to read
+// on-chain APY data; rate limiting prevents RPC node abuse.
+const yeiRateLimiter = createRateLimiter({ maxRequests: 30, windowMs: 60_000 });
+
 export async function GET(req: Request) {
+  const ip =
+    (req.headers as Headers).get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown";
+  if (yeiRateLimiter.isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const url = new URL(req.url);
     const vaultIdParam = url.searchParams.get('vaultId');

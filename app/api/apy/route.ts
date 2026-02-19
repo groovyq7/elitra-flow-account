@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import { getCached, setCached } from "@/lib/utils/simple-api-cache";
+import { createRateLimiter } from "@/lib/utils/rate-limit";
 import { fetchTakaraData, type TakaraVaultResult } from "@/app/api/protocols/takara/route";
 import { fetchYeiData, type YeiVaultResult } from "@/app/api/protocols/yei/route";
 
+// 30 requests / minute per IP. The APY route calls Sei RPC via the protocol
+// sub-routes; unconstrained hammering could impact the shared RPC node.
+const rateLimiter = createRateLimiter({ maxRequests: 30, windowMs: 60_000 });
+
 export async function GET(req: Request) {
+  const ip =
+    (req.headers as Headers).get("x-forwarded-for")?.split(",")[0].trim() ??
+    "unknown";
+  if (rateLimiter.isRateLimited(ip)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   try {
     const url = new URL(req.url);
     const vaultId = url.searchParams.get("vaultId");
