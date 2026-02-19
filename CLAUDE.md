@@ -208,3 +208,9 @@ expected pattern is missing. `npm ci` in CI will fail loudly if patches don't ap
 This log originates from the SDK's own source. It is preserved in the patched output
 (Patches 6a/6b can't avoid it). It is not added by us; it will disappear when the
 SDK vendor removes it upstream.
+
+## ABI Files
+
+ABI files in `lib/abis/` include some unused ABIs for future use — do not delete without checking with the Spicenet team.
+
+See `lib/abis/README.md` for a full breakdown of which ABIs are actively used vs. included for future features or external integrators.
