@@ -50,13 +50,14 @@ export function computePositionPnL(input: PositionPnLInput): PositionPnLResult {
     costBasis,
     realizedPnL,
     assetDecimals,
-    extraPrecision = 0,
   } = input;
 
-  const precisionMul = extraPrecision > 0 ? pow10(extraPrecision) : 1n;
-  // underlyingValueRaw = shares * rate / 1e18 (with optional extra precision)
-  const underlyingValueRaw =
-    (shareBalance * rate * precisionMul) / RATE_SCALE / precisionMul;
+  // underlyingValueRaw = shares * rate / 1e18 (raw underlying asset units)
+  // NOTE: extraPrecision is kept for API compatibility but has no effect on precision
+  // because dividing by precisionMul at the end cancels the gain. The correct
+  // precision approach is to work with 18-decimal fixed-point which is already
+  // sufficient for share → asset conversion (both are 18-decimal).
+  const underlyingValueRaw = (shareBalance * rate) / RATE_SCALE;
 
   const unrealizedPnLRaw = underlyingValueRaw - costBasis;
   const totalPnLRaw = realizedPnL + unrealizedPnLRaw;

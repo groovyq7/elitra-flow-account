@@ -23,18 +23,22 @@ export class VaultSDK {
     const vaults = await this.getVaultList()
 
     // Mock implementation - return positions for first 2 vaults
-    return vaults.slice(0, 2).map((vault) => ({
-      vaultId: vault.id,
-      vault,
-      shares: BigInt(Math.floor(Math.random() * 1000000) * Math.pow(10, 18)),
-      assets: BigInt(Math.floor(Math.random() * 5000) * Math.pow(10, vault.token0.decimals)),
-      pendingRewards: BigInt(Math.floor(Math.random() * 100) * Math.pow(10, vault.token0.decimals)),
-    }))
+    // Use BigInt arithmetic to avoid Number precision loss for large values (> 2^53)
+    return vaults.slice(0, 2).map((vault) => {
+      const decimalsMul = 10n ** BigInt(vault.token0.decimals);
+      return {
+        vaultId: vault.id,
+        vault,
+        shares: BigInt(Math.floor(Math.random() * 1000000)) * (10n ** 18n),
+        assets: BigInt(Math.floor(Math.random() * 5000)) * decimalsMul,
+        pendingRewards: BigInt(Math.floor(Math.random() * 100)) * decimalsMul,
+      };
+    })
   }
 
   async getUserRewards(walletAddress: string, vaultId?: string): Promise<bigint> {
     // Mock implementation - in production this would be contract calls
-    return BigInt(Math.floor(Math.random() * 50) * Math.pow(10, 18))
+    return BigInt(Math.floor(Math.random() * 50)) * (10n ** 18n)
   }
 
   async getVaultTransactions(walletAddress: string, vaultId?: string): Promise<VaultTransaction[]> {

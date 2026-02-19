@@ -46,7 +46,7 @@ export function computeApy24hLinear(
 
   return {
     apyScaled,
-    apy: (Number(formatUnits(apyScaled, 18)) * 100).toString(), // ratio (e.g., 0.08 = 8%)
+    apy: (Number(formatUnits(apyScaled, 18)) * 100).toString(), // percentage string (e.g., "8" = 8% APY)
     dt: Number(dt),
   };
 }

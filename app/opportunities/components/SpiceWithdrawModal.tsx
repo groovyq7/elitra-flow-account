@@ -89,6 +89,9 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
         ? embeddedWalletAddress
         : externalWalletAddress;
 
+    // minimumAssets = 1n: require at least 1 raw unit returned to prevent
+    // silent zero-asset withdrawals. Proper slippage protection would compute
+    // a percentage of expected assets, but that requires the current vault rate.
     return [
       {
         chainId: 5115,
@@ -99,7 +102,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
             data: encodeFunctionData({
               abi: TELLER_ABI,
               functionName: "bulkWithdrawNow",
-              args: [tokenAddress, tokenAmount, 0n, recipient],
+              args: [tokenAddress, tokenAmount, 1n, recipient],
             }),
           },
         ],

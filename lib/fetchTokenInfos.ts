@@ -15,7 +15,7 @@ export async function fetchTokenInfos(
   chain: Chain,
   vaultsData?: Vault[]
 ): Promise<TokenInfo[]> {
-  const balances = await Promise.all(
+  const results = await Promise.allSettled(
     tokens.map(async (token) => {
       // Fetch real balance using getTokenBalance
       const { formatted } = await getTokenBalance(
@@ -48,9 +48,9 @@ export async function fetchTokenInfos(
                 v.token0.address.toLowerCase() === token.address.toLowerCase()
             )?.apy || 1;
       const apy = Number(vaultApy);
-      const availableUSD = (available * price * 100) / 100;
-      const yearlyReward = (((available * apy) / 100) * 100) / 100;
-      const yearlyRewardUSD = (yearlyReward * price * 100) / 100;
+      const availableUSD = available * price;
+      const yearlyReward = (available * apy) / 100;
+      const yearlyRewardUSD = yearlyReward * price;
 
       return {
         symbol: token.symbol,
@@ -62,9 +62,23 @@ export async function fetchTokenInfos(
         yearlyReward,
         yearlyRewardUSD,
         price,
-      };
+      } satisfies TokenInfo;
     })
   );
+
+  // Filter out failed fetches and log errors
+  const balances: TokenInfo[] = [];
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      balances.push(result.value);
+    } else {
+      console.error(
+        `[fetchTokenInfos] Failed to fetch info for token ${tokens[i]?.symbol}:`,
+        result.reason
+      );
+    }
+  }
   return balances;
 }
 

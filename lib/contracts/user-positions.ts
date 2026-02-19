@@ -1,7 +1,7 @@
 import { fetchQuery } from "@/lib/utils/query";
 
 // Cache for user position queries (1 minute TTL)
-const USER_POS_TTL = 1;
+const USER_POS_TTL = 60_000; // milliseconds
 const userPosCache: Record<string, { data: UserVaultPositionResult | null; timestamp: number; error?: unknown }> = {};
 
 export interface UserVaultPositionResult {
