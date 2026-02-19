@@ -5,7 +5,7 @@ export const SUPPORTED_CHAIN_IDS = [11155111, 421614, 84532, 5115] as const;
 export const SPICEFLOW_MODE = '7702' as const;
 export const NATIVE_CHAIN_ID = 5115; // Citrea Testnet
 export const SPICENET_API_URL =
-  process.env.NEXT_PUBLIC_RELAYER_API_URL || '/api/relayer';
+  process.env.NEXT_PUBLIC_RELAYER_API_URL || 'https://tx-submission-api-dev.spicenet.io';
 
 export const SOLVER_ADDRESS =
   "0x111115763723B53395308eC4c9AB9d5FB0844cae" as `0x${string}`;
@@ -22,7 +22,5 @@ export const WCBTC_ADDRESS =
   "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93" as `0x${string}`;
 
 // Note: NEXT_PUBLIC_RELAYER_API_URL is optional.
-// When unset (the default), SPICENET_API_URL defaults to '/api/relayer' which proxies
-// requests through next.config.mjs rewrites to SPICENET_RELAYER_DESTINATION.
-// Only set NEXT_PUBLIC_RELAYER_API_URL if you want to bypass the proxy and call
-// the relayer URL directly from the browser (not recommended in production).
+// Defaults to the Spicenet dev TX submission API if not set.
+// Override in Vercel env vars to point at a different environment (e.g. production).
