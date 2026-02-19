@@ -1,7 +1,8 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { useChainId, useAccount } from "wagmi"
+import { useChainId } from "wagmi"
+import { useSpiceStore } from "@/store/useSpiceStore"
 import { getVaultsByChain, getVaultById } from "@/lib/contracts/vault-registry"
 import type { UserPosition } from "@/lib/types"
 
@@ -29,7 +30,7 @@ export function useVaultDetails(vaultId: string) {
 }
 
 export function useUserPositions() {
-  const { address } = useAccount()
+  const address = useSpiceStore((s) => s.connectedAddress)
   const chainId = useChainId()
 
   return useQuery({
@@ -48,7 +49,7 @@ export function useUserPositions() {
 }
 
 export function useUserRewards(vaultId?: string) {
-  const { address } = useAccount()
+  const address = useSpiceStore((s) => s.connectedAddress)
   const chainId = useChainId()
 
   return useQuery({

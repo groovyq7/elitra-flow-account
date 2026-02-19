@@ -1,11 +1,12 @@
 "use client"
 
-import { useAccount, useReadContract } from "wagmi"
+import { useReadContract } from "wagmi"
+import { useSpiceStore } from "@/store/useSpiceStore"
 import { formatUnits, erc20Abi } from "viem"
 import { VAULT_ABI, ERC20_ABI } from "@/lib/contracts/vault-abi"
 
 export function useBalance(tokenAddress: string) {
-  const { address } = useAccount()
+  const address = useSpiceStore((s) => s.connectedAddress)
 
   // Read share token decimals assuming the vault share token conforms to ERC20 (common for ERC4626)
   const { data: decimals } = useReadContract({

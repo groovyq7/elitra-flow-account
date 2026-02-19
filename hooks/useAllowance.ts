@@ -1,8 +1,8 @@
+import { useSpiceStore } from "@/store/useSpiceStore";
 import { useEffect } from "react"
 import toast from "react-hot-toast"
 import { ERC20_ABI } from "@/lib/contracts/vault-abi"
 import {
-  useAccount,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -14,7 +14,7 @@ import { isAddress } from "viem"
 const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 export function useAllowance(selectedTokenAddressIn: string, spender: string) {
-  const { address } = useAccount()
+  const address = useSpiceStore((s) => s.connectedAddress)
 
   // Validate addresses before using them in contract reads/writes
   const isTokenValid = isAddress(selectedTokenAddressIn)

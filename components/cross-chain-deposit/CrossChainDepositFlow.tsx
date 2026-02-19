@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useSwitchChain } from "wagmi";
+import { useSpiceStore } from "@/store/useSpiceStore";
 import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 import { SelectChainModal } from "./SelectChainModal";
 import { CrossChainDepositModal } from "./CrossChainDepositModal";
@@ -64,7 +65,7 @@ const CrossChainDepositFlowInner: React.FC<CrossChainDepositFlowProps> = ({
   const embeddedWalletAddress = embeddedWallet?.address;
 
   // Get external wallet address from wagmi
-  const { address: externalWalletAddress } = useAccount();
+  const externalWalletAddress = useSpiceStore((s) => s.connectedAddress);
   const { switchChainAsync } = useSwitchChain();
 
   const chainSelectedRef = useRef(false);

@@ -8,7 +8,8 @@ import {
   getVaultRate,
 } from "@/lib/utils/get-token-balance";
 import { formatPrice, formatTokenAmount } from "@/lib/utils/format";
-import { useAccount, useChains, useChainId } from "wagmi";
+import { useChains, useChainId } from "wagmi";
+import { useSpiceStore } from "@/store/useSpiceStore";
 import { TokenType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { zeroAddress, parseUnits, formatUnits } from "viem";
@@ -35,7 +36,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
   className = "",
   reload = false,
 }) => {
-  const { address } = useAccount();
+  const address = useSpiceStore((s) => s.connectedAddress);
   const chains = useChains();
   const chainId = useChainId();
   const chain = chains.find((c) => c.id === chainId)!;
