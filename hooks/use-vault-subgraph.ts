@@ -105,9 +105,9 @@ export function useVaultListSubgraph(): UseVaultListSubgraphResult {
       return {
         ...v,
         apy: typeof m.apy === "number" ? m.apy : v.apy,
-        rate: parsedRate || 1,
+        rate: parsedRate ?? 1n,
         tvl: typeof m.tvl === "number" ? m.tvl : 0,
-        totalSupply: parsedSupply || 1,
+        totalSupply: parsedSupply ?? 1n,
         depositsCount: m.depositsCount,
         withdrawalsCount: m.withdrawalsCount,
         rateSnapshots: m.rateSnapshots,
@@ -137,7 +137,7 @@ export function useVaultDetailsSubgraph(vaultId?: string): UseVaultDetailsSubgra
 
   const [result, refetch] = useQuery<{ Vault: VaultMetricsRaw[] }>({
     query: SINGLE_VAULT_QUERY,
-    variables: { id: lowerId },
+    variables: { id: lowerId ?? "" },
     pause,
   });
 
@@ -152,9 +152,9 @@ export function useVaultDetailsSubgraph(vaultId?: string): UseVaultDetailsSubgra
     return {
       ...base,
       apy: typeof m.apy === "number" ? m.apy : base.apy,
-      rate: parsedRate || 1,
+      rate: parsedRate ?? 1n,
       tvl: typeof m.tvl === "number" ? m.tvl : 0,
-      totalSupply: parsedSupply || 1,
+      totalSupply: parsedSupply ?? 1n,
       depositsCount: m.depositsCount,
       withdrawalsCount: m.withdrawalsCount,
       rateSnapshots: m.rateSnapshots,

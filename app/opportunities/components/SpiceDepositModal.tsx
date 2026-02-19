@@ -59,12 +59,13 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
 
   // Fetch conversion rate when asset changes
   useEffect(() => {
+    let cancelled = false;
     const fetchRate = async () => {
       const asset = depositInputHook.selectedAsset;
       if (!asset) return;
 
       if (asset.symbol?.toUpperCase().includes("BTC")) {
-        setConversionRate(1);
+        if (!cancelled) setConversionRate(1);
         return;
       }
 
@@ -72,12 +73,13 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
       const sourcePrice = await getTokenPrice(asset.symbol || "USDC");
       const destPrice = await getTokenPrice("WBTC");
 
-      if (sourcePrice.price && destPrice.price && destPrice.price > 0) {
+      if (!cancelled && sourcePrice.price && destPrice.price && destPrice.price > 0) {
         const rate = sourcePrice.price / destPrice.price;
         setConversionRate(rate);
       }
     };
     fetchRate();
+    return () => { cancelled = true; };
   }, [depositInputHook.selectedAsset]);
 
   // Token transfer amount for the Teller.deposit call (7702 vault deposit)

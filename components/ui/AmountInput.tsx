@@ -79,12 +79,14 @@ export const AmountInput: React.FC<AmountInputProps> = ({
   };
 
   useEffect(() => {
+    let cancelled = false;
     const fetchBalance = async () => {
       if (!address) {
         setTokenBalance("0");
         return;
       }
       const res = await getTokenBalance(selectedToken.address, address, chain);
+      if (cancelled) return;
       setTokenBalance(res.formatted);
       if (res.balance !== undefined) setTokenBalanceRaw(res.balance);
       if (selectedToken.symbol.toLowerCase().startsWith("e")) {
@@ -92,14 +94,17 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           selectedToken.symbol.toUpperCase().replace("E", "")
         );
         const ratio = await getVaultRate(selectedToken.symbol, chain);
+        if (cancelled) return;
         const adjustedPrice = price.price * Number(ratio.rate);
         setTokenPrice(adjustedPrice);
       } else {
         const price = await getTokenPrice(selectedToken.symbol);
+        if (cancelled) return;
         setTokenPrice(price.price);
       }
     };
     fetchBalance();
+    return () => { cancelled = true; };
   }, [address, selectedToken, chain, reload]);
 
   useEffect(() => {

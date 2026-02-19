@@ -48,11 +48,13 @@ export function DepositedAssetsTable({
   const embeddedWalletAddress = useEmbeddedWalletAddress();
 
   useEffect(() => {
+    let cancelled = false;
     async function getUserPnl() {
       if (!isConnected || !address) return;
 
       const pnl: Record<string, UserPnlInfo> = {};
       for (const token of tokenInfos) {
+        if (cancelled) return;
         const [externalData, embeddedData] = await Promise.all([
           getUserVaultPositionFromSubgraph(address, token.token.address),
           embeddedWalletAddress
@@ -62,6 +64,8 @@ export function DepositedAssetsTable({
             )
             : Promise.resolve({ data: null }),
         ]);
+
+        if (cancelled) return;
 
         const combinedShareBalance =
           (externalData?.data?.currentShareBalance || BigInt(0)) +
@@ -75,6 +79,8 @@ export function DepositedAssetsTable({
 
         const rateData = await getVaultRate(token.token.symbol, chain);
 
+        if (cancelled) return;
+
         const userPnlData = computePositionPnL({
           shareBalance: combinedShareBalance,
           costBasis: combinedCostBasis,
@@ -83,6 +89,7 @@ export function DepositedAssetsTable({
           assetDecimals: 18,
         });
         const price = await getTokenPrice(token.token.symbol);
+        if (cancelled) return;
         pnl[token.token.symbol] = {
           pnl: formatPrice(Number(userPnlData.unrealizedPnL)),
           pnlUSD: formatPrice(
@@ -100,10 +107,12 @@ export function DepositedAssetsTable({
           ),
         };
       }
-      setUserPositionPnlInfo(pnl);
+      if (!cancelled) setUserPositionPnlInfo(pnl);
     }
     getUserPnl();
-  }, [isConnected, address, embeddedWalletAddress, tokenInfos]);
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, embeddedWalletAddress, tokenInfos, chain?.id]);
 
   return (
     <div className="overflow-auto">
