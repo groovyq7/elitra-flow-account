@@ -16,6 +16,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@dynamic-labs/ethereum": "^4.44.3",
+    "@dynamic-labs/sdk-react-core": "^4.44.3",
     "@hookform/resolvers": "^3.10.0",
     "@privy-io/react-auth": "^3.6.1",
     "@radix-ui/react-dialog": "latest",
@@ -35,6 +37,7 @@
     "clsx": "^2.1.1",
     "graphql": "^16.11.0",
     "graphql-request": "^7.2.0",
+    "jotai": "^2.13.1",
     "lucide-react": "^0.454.0",
     "mongodb": "^6.19.0",
     "next": "15.2.8",
