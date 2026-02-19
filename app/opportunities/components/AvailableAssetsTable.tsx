@@ -152,6 +152,7 @@ export function AvailableAssetsTable({
                             <button
                               onMouseEnter={() => setOpenDropdownId(token.symbol)}
                               onMouseLeave={() => setOpenDropdownId(null)}
+                              aria-label={`Balance breakdown for ${token.symbol}`}
                               className="hover:bg-gray-100 rounded p-0.5 transition-colors">
                               <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                             </button>

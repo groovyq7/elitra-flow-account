@@ -145,6 +145,7 @@ export function RegistrationForm() {
             </div>
             <Input
               name="xUsername"
+              aria-label="X (Twitter) username"
               value={formData.xUsername}
               onChange={handleInputChange}
               required
@@ -195,6 +196,7 @@ export function RegistrationForm() {
             </div>
             <Input
               name="telegram"
+              aria-label="Telegram username"
               value={formData.telegram}
               onChange={handleInputChange}
               required
