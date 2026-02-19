@@ -8,19 +8,28 @@ interface VaultStrategyCardProps {
   strategyInfo: {
     title: string;
     description: string;
-    details: string[];
-    risks: string[];
+    details?: string[];
+    risks?: string[];
   };
 }
 
 export function VaultStrategyCard({ strategyInfo }: VaultStrategyCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const details = strategyInfo.details ?? [];
+  const risks = strategyInfo.risks ?? [];
+
   return (
     <Card className="bg-card border-border hover:border-primary/20 transition-all duration-300">
-      <div className="p-6 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
+      <button
+        type="button"
+        className="w-full p-6 cursor-pointer text-left"
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-controls="vault-strategy-details"
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <BookOpen className="h-6 w-6 text-primary" />
+            <BookOpen className="h-6 w-6 text-primary" aria-hidden="true" />
             <h3 className="text-xl font-bold text-foreground uppercase tracking-wide">
               Strategy Explanation
             </h3>
@@ -30,18 +39,18 @@ export function VaultStrategyCard({ strategyInfo }: VaultStrategyCardProps) {
               {strategyInfo.title}
             </Badge>
             {isExpanded ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground" />
+              <ChevronUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+              <ChevronDown className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
             )}
           </div>
         </div>
         {!isExpanded && (
           <p className="text-muted-foreground mt-3">{strategyInfo.description}</p>
         )}
-      </div>
+      </button>
       {isExpanded && (
-        <div className="px-6 pb-6 space-y-6">
+        <div id="vault-strategy-details" className="px-6 pb-6 space-y-6">
           <Separator />
           <div>
             <p className="text-foreground mb-4">{strategyInfo.description}</p>
@@ -49,31 +58,39 @@ export function VaultStrategyCard({ strategyInfo }: VaultStrategyCardProps) {
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h4 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-500" />
+                <TrendingUp className="h-5 w-5 text-green-500" aria-hidden="true" />
                 Strategy Details
               </h4>
-              <ul className="space-y-2">
-                {strategyInfo.details.map((detail, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-shrink-0" />
-                    {detail}
-                  </li>
-                ))}
-              </ul>
+              {details.length > 0 ? (
+                <ul className="space-y-2">
+                  {details.map((detail, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-shrink-0" aria-hidden="true" />
+                      {detail}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No strategy details available.</p>
+              )}
             </div>
             <div>
               <h4 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Info className="h-5 w-5 text-yellow-500" />
+                <Info className="h-5 w-5 text-yellow-500" aria-hidden="true" />
                 Risk Considerations
               </h4>
-              <ul className="space-y-2">
-                {strategyInfo.risks.map((risk, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 flex-shrink-0" />
-                    {risk}
-                  </li>
-                ))}
-              </ul>
+              {risks.length > 0 ? (
+                <ul className="space-y-2">
+                  {risks.map((risk, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 mt-2 flex-shrink-0" aria-hidden="true" />
+                      {risk}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">No risk considerations listed.</p>
+              )}
             </div>
           </div>
         </div>

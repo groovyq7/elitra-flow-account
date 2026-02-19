@@ -2,7 +2,8 @@ import Image from "next/image";
 
 export function VaultDetailsSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" role="status" aria-busy="true" aria-label="Loading vault details">
+      <span className="sr-only">Loading vault details, please wait…</span>
       <nav className="border-b border-border bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
@@ -20,12 +21,12 @@ export function VaultDetailsSkeleton() {
                 TVL: Loading...
               </div>
             </div>
-            <div className="h-8 w-24 bg-muted rounded"></div>
+            <div className="h-8 w-24 bg-muted rounded animate-pulse" aria-hidden="true"></div>
           </div>
         </div>
       </nav>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse space-y-8">
+        <div className="animate-pulse space-y-8" aria-hidden="true">
           <div className="space-y-4">
             <div className="h-8 bg-muted rounded w-1/3"></div>
             <div className="h-4 bg-muted rounded w-1/4"></div>
