@@ -28,7 +28,6 @@ import Link from "next/link";
 import { LINKS, OFFICIAL_TOKENS, VAULT_TOKENS } from "@/lib/constants";
 import { DepositedAssetsTable } from "./components/DepositedAssetsTable";
 import { ElitraAccountTab } from "./components/ElitraAccountTab";
-import { zeroAddress } from "viem";
 import { Tabs } from "@radix-ui/react-tabs";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getVaultsByChain, getVaultsByChainWithSubgraph } from "@/lib/contracts/vault-registry";

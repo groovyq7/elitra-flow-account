@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAccount, useConfig } from "wagmi";
-import { useVaultDetails, useUserRewards } from "@/hooks/use-vault-data";
+import { useVaultDetails } from "@/hooks/use-vault-data";
 import { useTotalSupply } from "@/hooks/use-vault-transactions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   formatSharePrice,
   shortenAddress,
 } from "@/lib/utils/format";
-import { Zap, Info, BookOpen, Coins, ArrowLeft } from "lucide-react";
+import { Coins, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { getTokenImage } from "@/lib/utils";
 import { ApyChart } from "./components/ApyChart";
@@ -29,7 +29,6 @@ import { UserPnlInfo, TokenType, Vault } from "@/lib/types";
 import { getUserVaultPositionFromSubgraph } from "@/lib/contracts/user-positions";
 import { computePositionPnL } from "@/lib/utils/pnl";
 import { getTokenBalance, getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
-import { Separator } from "@/components/ui/separator";
 import { getVaultByIdWithSubgraph } from "@/lib/contracts/vault-registry";
 import { GrowthChart } from "@/app/opportunities/components/GrowthChart";
 import { ArrowDownToLine } from "lucide-react";
