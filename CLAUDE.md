@@ -131,3 +131,55 @@ useEffect(() => {
 - No `console.log` in production code
 - Use `console.error` / `console.warn` only inside `catch` blocks where structured logging isn't available
 - PostHog analytics (`lib/analytics.ts`) is the approved mechanism for event tracking
+
+---
+
+## SDK Patch: @spicenet-io/spiceflow-ui
+
+### What it does
+
+`scripts/patch-spiceflow.js` makes 8 sets of regex-based patches to the minified
+SpiceFlow SDK bundle (`node_modules/@spicenet-io/spiceflow-ui/dist/index.js` and
+`index.cjs.js`) to enable integration with an external RainbowKit wallet instead
+of Privy's embedded wallet.
+
+**Target SDK version:** `1.11.13` (exact pin, no caret).
+
+### Why we patch instead of forking
+
+The SDK is closed-source. Patching the minified bundle is the only option for
+fixing integration issues without maintaining a full fork upstream.
+
+### Patches applied
+
+| # | Label | What it does |
+|---|-------|-------------|
+| 1 | `closeOnSelect` | Prevents SelectChainModal from closing the deposit flow on chain select |
+| 2 | `skip-privy` | Skips the "provider-login" (Privy auth) step; goes straight to "connect-wallet" |
+| 3 | `external-wallet-override` | Adds `externalWalletAddress` prop to SpiceDeposit inner; overrides `useAccount()` |
+| 4 | `skip-connect-wallet` | Skips "connect-wallet" step when wallet is already connected |
+| 5 | `sn-wallet-check` | Fixes wallet-connected check to consider `externalWalletAddress` in 7702 mode |
+| 6 | `sn-skip-privy-exec` | Skips Privy auth checks during deposit execution when external wallet is present |
+| 7 | `sn-bypass-privy-auth-btn` | Bypasses "Authentication Required" button text when external wallet is connected |
+| 8 | `sn-7702-address-fallback` | Uses `externalWalletAddress` as fallback for embedded wallet address in 7702 flow |
+
+### How to update when the SDK version changes
+
+1. Update `"@spicenet-io/spiceflow-ui"` version pin in `package.json`.
+2. Bump `EXPECTED_VERSION` in `scripts/patch-spiceflow.js`.
+3. Run `npm install` — the postinstall will fail with pattern-not-found warnings.
+4. Diff the new minified bundle vs the old to find what changed.
+5. Update each `patch()` call's `oldPattern`/`newPattern` as needed.
+6. Update the `verify()` calls at the bottom of the script for the new patterns.
+7. Run `node scripts/patch-spiceflow.js` manually and confirm all `VERIFIED` lines print.
+
+### Verification
+
+The script runs `verify()` after all patches and calls `process.exit(1)` if any
+expected pattern is missing. `npm ci` in CI will fail loudly if patches don't apply.
+
+### Note on `console.log("IS NON 7702", ...)`
+
+This log originates from the SDK's own source. It is preserved in the patched output
+(Patches 6a/6b can't avoid it). It is not added by us; it will disappear when the
+SDK vendor removes it upstream.
