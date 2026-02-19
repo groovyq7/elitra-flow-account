@@ -1,7 +1,6 @@
 // Multichain official tokens list: chainId -> array of tokens
 
 import { zeroAddress } from "viem";
-import { atomWithStorage } from "jotai/utils";
 import { TokenType } from "./types";
 // Add or update tokens as needed for each chain
 export const OFFICIAL_TOKENS: Record<number, Array<TokenType>> = {
@@ -300,5 +299,3 @@ export const NATIVE_TOKEN_ADDRESS: Record<number, string> = {
   1329: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   1: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
 };
-
-export const priceFeedMap = atomWithStorage<Record<string, number>>("priceFeedMap", {});
