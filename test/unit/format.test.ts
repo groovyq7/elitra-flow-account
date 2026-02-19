@@ -134,6 +134,16 @@ describe("formatCurrency", () => {
     // !numericAmount is truthy for 0 → returns $0.00
     expect(formatCurrency(0)).toBe("$0.00");
   });
+
+  it("formats negative numbers using Intl (< 1K range)", () => {
+    // !numericAmount is false for -100, so it goes through to Intl.NumberFormat
+    const result = formatCurrency(-100);
+    expect(result).toMatch(/-.*100/); // should contain a minus sign and 100
+  });
+
+  it("very large number (> 1B)", () => {
+    expect(formatCurrency(7_500_000_000)).toBe("$7.50B");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -226,8 +236,31 @@ describe("formatTVL", () => {
     expect(formatTVL(3000000000)).toBe("$3.00B");
   });
 
-  it("formats small amounts", () => {
+  it("formats small amounts (< 1K)", () => {
     expect(formatTVL(42.5)).toBe("$42.50");
+  });
+
+  it("negative value: passes through without abbreviation (not treated as 0)", () => {
+    // !tvl is false for -100, so it reaches the toFixed(2) branch
+    const result = formatTVL(-1000);
+    // Negative values land in the final `toFixed` branch (< 1K comparisons fail for negatives)
+    expect(result).toBe("$-1000.00");
+  });
+
+  it("exactly 1K boundary formats as K", () => {
+    expect(formatTVL(1000)).toBe("$1.00K");
+  });
+
+  it("exactly 1M boundary formats as M", () => {
+    expect(formatTVL(1_000_000)).toBe("$1.00M");
+  });
+
+  it("exactly 1B boundary formats as B", () => {
+    expect(formatTVL(1_000_000_000)).toBe("$1.00B");
+  });
+
+  it("formats a very large number (> 1B)", () => {
+    expect(formatTVL(5_750_000_000)).toBe("$5.75B");
   });
 });
 
@@ -284,6 +317,23 @@ describe("shortenAddress", () => {
       "0x123456...345678"
     );
   });
+
+  it("short address (< 8 chars): still produces a result without throwing", () => {
+    // e.g. "0x123" — only 5 chars, shorter than the default prefix+suffix slice
+    const result = shortenAddress("0x123");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+    // The result contains "..." from the template
+    expect(result).toContain("...");
+  });
+
+  it("non-hex / invalid address: treats as a plain string (no throw)", () => {
+    const result = shortenAddress("notanaddress1234567890");
+    expect(typeof result).toBe("string");
+    expect(result).toContain("...");
+    // Should start with the first (chars+2) characters of the string
+    expect(result.startsWith("notana")).toBe(true);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -335,5 +385,29 @@ describe("toFixedDown", () => {
 
   it("handles exact values", () => {
     expect(toFixedDown(1.5, 1)).toBe("1.5");
+  });
+
+  it("floors (not rounds) — does NOT round up", () => {
+    // toFixed(2) on 42.995 would round to 43.00, but toFixedDown should floor
+    expect(toFixedDown(42.995, 2)).toBe("42.99");
+  });
+
+  it("floors negative numbers toward negative infinity", () => {
+    // Math.floor(-2.999 * 100) / 100 = Math.floor(-299.9) / 100 = -300/100 = -3
+    expect(toFixedDown(-2.999, 2)).toBe("-3.00");
+  });
+
+  it("handles 0 digits (integer truncation)", () => {
+    expect(toFixedDown(5.7, 0)).toBe("5");
+  });
+
+  it("handles 4 decimal places", () => {
+    expect(toFixedDown(3.14159265, 4)).toBe("3.1415");
+  });
+
+  it("returns correct string type", () => {
+    const result = toFixedDown(1.23456, 3);
+    expect(typeof result).toBe("string");
+    expect(result).toBe("1.234");
   });
 });
