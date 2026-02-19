@@ -19,7 +19,6 @@ import {
 import { Coins, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { getTokenImage } from "@/lib/utils";
-import { ApyChart } from "./components/ApyChart";
 import { KeyMetricsCard } from "./components/KeyMetricsCard";
 import { DepositModal } from "@/app/opportunities/components/DepositModal";
 import { TokenSelectorModal } from "@/app/opportunities/components/TokenSelectorModal";

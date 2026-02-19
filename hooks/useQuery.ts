@@ -89,7 +89,7 @@ export function useQuery<T = unknown>({
 
   // refetch forces a new request by deleting the cache entry.
   const refetch = useCallback(
-    async (newVariables?: Record<string, any>) => {
+    async (newVariables?: Record<string, unknown>) => {
       if (pause) return
 
       // Use new variables if provided, otherwise fall back to the original variables.
