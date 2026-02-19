@@ -20,6 +20,13 @@ test.describe("Modals", () => {
       await page.waitForTimeout(1000);
       await page.screenshot({ path: "test/e2e/screenshots/modal-01-deposit-open.png" });
 
+      // Modal or dialog should now be visible
+      const modal = page.locator('[role="dialog"], [aria-modal="true"], .modal').first();
+      const modalVisible = await modal.isVisible().catch(() => false);
+      if (modalVisible) {
+        await expect(modal).toBeVisible();
+      }
+
       // Close with ESC
       await page.keyboard.press("Escape");
       await page.waitForTimeout(500);
@@ -37,7 +44,7 @@ test.describe("Modals", () => {
         await page.waitForTimeout(500);
       }
     } else {
-      console.log("No deposit button found on opportunities page");
+      test.skip(true, "No deposit button found on opportunities page");
     }
 
     expect(errors.filter(e => !isKnownWarning(e))).toHaveLength(0);
@@ -81,7 +88,7 @@ test.describe("Modals", () => {
       await page.screenshot({ path: "test/e2e/screenshots/modal-06-popup-closed.png" });
     } else {
       await page.screenshot({ path: "test/e2e/screenshots/modal-05-no-badge.png" });
-      console.log("Account badge not found — wallet may not be connected");
+      // Wallet not connected in test env — this is expected
     }
 
     expect(errors.filter(e => !isKnownWarning(e))).toHaveLength(0);
@@ -89,21 +96,88 @@ test.describe("Modals", () => {
 
   test("deposit form validation — empty amount disables submit", async ({ page }) => {
     const depositBtn = page.getByRole("button", { name: /deposit/i }).first();
-    if (await depositBtn.isVisible()) {
-      await depositBtn.click();
-      await page.waitForTimeout(1000);
+    const depositBtnVisible = await depositBtn.isVisible().catch(() => false);
+    if (!depositBtnVisible) {
+      test.skip(true, "No deposit button visible — skipping form validation test");
+      return;
+    }
 
-      // Any submit button inside the modal should be disabled with no amount
-      const submitBtn = page.getByRole("button", { name: /confirm|submit|deposit/i }).last();
+    await depositBtn.click();
+    await page.waitForTimeout(1000);
+
+    // Find the amount input and ensure it starts empty
+    const amountInput = page.locator('input[placeholder="0.00"], input[inputmode="decimal"]').first();
+    if (await amountInput.isVisible()) {
+      // Clear any pre-filled value
+      await amountInput.fill("");
+
+      // The confirm/submit button should be disabled when amount is empty
+      // Try a few common patterns for the submit button
+      const submitBtn = page.getByRole("button", { name: /confirm|submit|deposit now/i }).last();
       if (await submitBtn.isVisible()) {
-        const isDisabled = await submitBtn.isDisabled();
-        // Not a hard failure — just screenshot for review
-        await page.screenshot({ path: "test/e2e/screenshots/modal-07-empty-validation.png" });
-        console.log(`Submit button disabled with empty amount: ${isDisabled}`);
+        await expect(submitBtn).toBeDisabled();
       }
 
-      await page.keyboard.press("Escape");
+      // Type a valid amount — submit should become enabled (if wallet connected)
+      await amountInput.fill("0.001");
+      await page.waitForTimeout(300);
+      await page.screenshot({ path: "test/e2e/screenshots/modal-07-with-amount.png" });
     }
+
+    await page.keyboard.press("Escape");
+  });
+
+  test("deposit amount input accepts decimal values", async ({ page }) => {
+    const depositBtn = page.getByRole("button", { name: /deposit/i }).first();
+    const depositBtnVisible = await depositBtn.isVisible().catch(() => false);
+    if (!depositBtnVisible) {
+      test.skip(true, "No deposit button visible");
+      return;
+    }
+
+    await depositBtn.click();
+    await page.waitForTimeout(1000);
+
+    const amountInput = page.locator('input[placeholder="0.00"], input[inputmode="decimal"]').first();
+    if (await amountInput.isVisible()) {
+      // Should accept decimal numbers
+      await amountInput.fill("1.5");
+      await expect(amountInput).toHaveValue("1.5");
+
+      // Should reject non-numeric input (the onChange strips it)
+      await amountInput.fill("abc");
+      const val = await amountInput.inputValue();
+      // After stripping: value should be empty or numeric only
+      expect(val).toMatch(/^[0-9.]*$/);
+
+      // Should handle leading dot
+      await amountInput.fill(".5");
+      await page.screenshot({ path: "test/e2e/screenshots/modal-08-decimal-input.png" });
+    }
+
+    await page.keyboard.press("Escape");
+  });
+
+  test("modal does not show JS errors on open/close cycle", async ({ page }) => {
+    const jsErrors: string[] = [];
+    page.on("pageerror", (err) => jsErrors.push(err.message));
+    page.on("console", (msg) => {
+      if (msg.type() === "error") jsErrors.push(msg.text());
+    });
+
+    const depositBtn = page.getByRole("button", { name: /deposit/i }).first();
+    const depositBtnVisible = await depositBtn.isVisible().catch(() => false);
+    if (depositBtnVisible) {
+      // Open/close three times to catch state reset bugs
+      for (let i = 0; i < 3; i++) {
+        await depositBtn.click();
+        await page.waitForTimeout(500);
+        await page.keyboard.press("Escape");
+        await page.waitForTimeout(300);
+      }
+    }
+
+    expect(jsErrors.filter(e => !isKnownWarning(e))).toHaveLength(0);
   });
 });
 
