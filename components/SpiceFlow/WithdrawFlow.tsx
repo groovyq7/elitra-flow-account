@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { useWallets } from "@privy-io/react-auth";
+import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 import { SelectChainModal } from "@/components/cross-chain-deposit/SelectChainModal";
 import { WithdrawWidgetModal, useAssetInput } from "@spicenet-io/spiceflow-ui";
 import { encodeFunctionData, parseUnits } from "viem";
@@ -51,7 +52,16 @@ function getWBTCForChain(
 
 type Step = "chain-select" | "withdraw";
 
+// Shell component — guards against calling Privy hooks before the provider is ready
 export const WithdrawFlow: React.FC = () => {
+  const { isWithdrawOpen } = useSpiceStore();
+  const spiceFlowReady = useSpiceFlowReady();
+  if (!isWithdrawOpen || !spiceFlowReady) return null;
+  return <WithdrawFlowInner />;
+};
+
+// Inner component — only mounts when PrivyProvider is available
+const WithdrawFlowInner: React.FC = () => {
   const {
     isWithdrawOpen,
     closeWithdraw,
