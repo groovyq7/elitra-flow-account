@@ -31,6 +31,16 @@ function isValidHandle(handle: string): boolean {
   return typeof handle === "string" && handle.trim().length > 0 && handle.length <= 64;
 }
 
+/**
+ * Normalise a Telegram handle by ensuring it starts with "@".
+ * The UI already adds "@" before submission, but direct API calls may omit it.
+ * We normalise here so stored handles are always in "@username" format.
+ */
+function normaliseTelegramHandle(handle: string): string {
+  const trimmed = handle.trim();
+  return trimmed.startsWith("@") ? trimmed : `@${trimmed}`;
+}
+
 // ── Simple in-memory IP rate limiter ─────────────────────────────────────────
 // Allows MAX_REQUESTS per IP within WINDOW_MS.
 // NOTE: This resets on each cold-start (serverless). For persistent rate
@@ -126,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     const result = await addCampaignRegistration({
       xUsername: xUsername.trim(),
-      telegram: telegram.trim(),
+      telegram: normaliseTelegramHandle(telegram), // Always stored as "@username"
       walletAddress: walletAddress.toLowerCase(),
       created_at: new Date(),
     });
