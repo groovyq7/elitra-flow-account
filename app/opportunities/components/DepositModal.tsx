@@ -116,6 +116,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         minAmount: BigInt(0),
         formattedEstimatedShares: "0",
         formattedMinAmount: "0",
+        formattedUSDAmount: "0.00",
       };
     }
 
@@ -125,6 +126,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         minAmount: BigInt(0),
         formattedEstimatedShares: "0",
         formattedMinAmount: "0",
+        formattedUSDAmount: "0.00",
       };
     }
 
@@ -240,7 +242,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
-            args: [NATIVE_TOKEN_ADDRESS[chainId], parsedAmount, 1],
+            args: [NATIVE_TOKEN_ADDRESS[chainId], parsedAmount, 1n],
             value: parsedAmount,
           } as any);
         } else {
@@ -248,7 +250,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
-            args: [depositTokenAddress, parsedAmount, 1],
+            args: [depositTokenAddress, parsedAmount, 1n],
           });
         }
         setTxStatus("loading");

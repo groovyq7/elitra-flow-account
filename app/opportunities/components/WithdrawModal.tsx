@@ -198,7 +198,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           args: [
             underlyingTokenAddress,
             parsedAmount,
-            0,
+            0n,
             address,
           ],
         });

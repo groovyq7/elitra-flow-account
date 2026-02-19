@@ -54,7 +54,7 @@ export const TransactionStatusModal: React.FC<TransactionStatusModalProps> = ({
   description,
   icon,
 }) => {
-  const explorerUrl = useConfig().getClient().chain.blockExplorers.default.url;
+  const explorerUrl = useConfig().getClient().chain.blockExplorers?.default?.url;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -160,7 +160,7 @@ export const TransactionStatusModal: React.FC<TransactionStatusModalProps> = ({
               </div>
             </div>
           </div>
-          {txHash && (
+          {txHash && explorerUrl && (
             <div className="flex flex-col items-center gap-2 mt-2 w-full">
               {/* <div className="flex items-center gap-3 mt-1">
                 {copied ? (

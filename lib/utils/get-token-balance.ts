@@ -129,7 +129,7 @@ export const getVaultRate = async (symbol: string, chain: Chain) => {
         stale: true,
       };
     }
-    return { rate: BigInt(0), rateRaw: BigInt(0), error: true, cached: false };
+    return { rate: "0", rateRaw: BigInt(0), error: true, cached: false };
   }
 };
 

@@ -99,7 +99,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
             data: encodeFunctionData({
               abi: TELLER_ABI,
               functionName: "bulkWithdrawNow",
-              args: [tokenAddress, tokenAmount, 0, recipient],
+              args: [tokenAddress, tokenAmount, 0n, recipient],
             }),
           },
         ],
