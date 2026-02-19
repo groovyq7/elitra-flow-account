@@ -1,3 +1,9 @@
+/**
+ * Fetches APY data from the YEI lending protocol on Sei mainnet.
+ * NOTE: This intentionally uses Sei MAINNET even though the app runs on testnets.
+ * Rationale: We display real-world APY data from the live YEI protocol to show
+ * projected vault yields. Deposits happen on testnets; this data is display-only.
+ */
 import { NextResponse } from 'next/server';
 import { getCached, setCached } from "@/lib/utils/simple-api-cache";
 import { createPublicClient, http } from 'viem';

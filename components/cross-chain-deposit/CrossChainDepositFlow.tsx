@@ -17,11 +17,12 @@ export interface CrossChainDepositFlowProps {
 }
 
 type FlowStep = "select-chain" | "provider-login" | "airdrop" | "deposit";
-// TODO: 421614 (Arbitrum Sepolia) is included in SUPPORTED_CHAINS from SpiceDepositModal
-// but not in this union type. If 421614 is selected via that entry point, it is
-// cast via `as SupportedChainId` and passed through — the SDK handles it at runtime.
-// Add 421614 here (and in CrossChainDepositModal / AirdropModal interfaces) once
-// the airdrop flow is confirmed to support Arbitrum Sepolia.
+// NOTE: 421614 (Arbitrum Sepolia) appears in SUPPORTED_CHAINS from SpiceDepositModal
+// but is intentionally omitted from this union type. When 421614 is selected at
+// the SpiceDepositModal entry point it is cast via `as SupportedChainId` and
+// passed through — the SDK handles it at runtime without strict typing.
+// Arbitrum Sepolia can be added here (and in CrossChainDepositModal / AirdropModal)
+// once the airdrop flow has been tested and confirmed to support that chain.
 type SupportedChainId = 11155111 | 84532 | 5115;
 
 export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
