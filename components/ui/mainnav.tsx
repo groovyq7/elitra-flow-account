@@ -7,7 +7,6 @@ import { formatTVL } from "@/lib/utils/format";
 import { useVaultList } from "@/hooks/use-vault-data";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useConfig } from "wagmi";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { Copy } from "lucide-react";
@@ -71,8 +70,7 @@ export default function MainNav() {
   const { data: vaults, isLoading: vaultsLoading } = useVaultList();
   const chain = useConfig().getClient().chain;
   const [isTvlLoading, setIsTvlLoading] = useState(true);
-  const path = usePathname();
-  const isHome = false; //path === "/";
+  const isHome = false;
 
   const [vaultData, setVaultData] = useState<
     { id: string; tvl: number; rate: number; price: number }[]
