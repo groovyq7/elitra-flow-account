@@ -100,10 +100,10 @@ export const config = createConfig({
   chains: [citreaTestnet, sepolia, arbitrumSepolia, baseSepolia],
   connectors: process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true" ? testConnectors : connectors,
   transports: {
-    [citreaTestnet.id]: http(),
-    [sepolia.id]: http(),
-    [arbitrumSepolia.id]: http(),
-    [baseSepolia.id]: http(),
+    [citreaTestnet.id]: http("https://rpc.testnet.citrea.xyz"),
+    [sepolia.id]: http("https://ethereum-sepolia-rpc.publicnode.com"),
+    [arbitrumSepolia.id]: http("https://sepolia-rollup.arbitrum.io/rpc"),
+    [baseSepolia.id]: http("https://sepolia.base.org"),
   },
 });
 
