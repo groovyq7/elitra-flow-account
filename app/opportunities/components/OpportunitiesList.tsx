@@ -42,22 +42,26 @@ export const OpportunitiesList: React.FC<OpportunitiesListProps> = ({
   useEffect(() => {
     let cancelled = false;
     async function getVaultsTVL() {
-      const _vaultData = await Promise.all(
-        availableVaults.map(async (vault) => {
-          const supply = await getTokenSupply(vault.id || "", chain);
-          const rate = await getVaultRate(vault.symbol, chain);
-          const price = await getTokenPrice(vault.token0?.symbol || "");
-          const tvl =
-            Number(supply.formatted) * Number(rate.rate) * Number(price.price);
-          return {
-            id: vault.id,
-            tvl: tvl,
-            rate: Number(rate.rate),
-            price: Number(price.price),
-          };
-        })
-      );
-      if (!cancelled) setVaultData(_vaultData);
+      try {
+        const _vaultData = await Promise.all(
+          availableVaults.map(async (vault) => {
+            const supply = await getTokenSupply(vault.id || "", chain);
+            const rate = await getVaultRate(vault.symbol, chain);
+            const price = await getTokenPrice(vault.token0?.symbol || "");
+            const tvl =
+              Number(supply.formatted) * Number(rate.rate) * Number(price.price);
+            return {
+              id: vault.id,
+              tvl: tvl,
+              rate: Number(rate.rate),
+              price: Number(price.price),
+            };
+          })
+        );
+        if (!cancelled) setVaultData(_vaultData);
+      } catch (err) {
+        console.error("Failed to fetch vault TVL data:", err);
+      }
     }
     getVaultsTVL();
     return () => { cancelled = true; };

@@ -178,9 +178,7 @@ export function DepositedAssetsTable({
                         $
                         {userPositionPnlInfo &&
                           userPositionPnlInfo[token.token.symbol]
-                          ? formatPrice(
-                            userPositionPnlInfo[token.token.symbol].pnlUSD
-                          )
+                          ? userPositionPnlInfo[token.token.symbol].pnlUSD
                           : "0.00"}{" "}
                       </span>
                     </td>
