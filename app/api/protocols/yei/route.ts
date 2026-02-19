@@ -4,7 +4,7 @@ import { createPublicClient, http } from 'viem';
 import { sei } from 'viem/chains';
 import yeiMarketAbi from '../../../../lib/abis/YeiMarket.json';
 // On-chain config
-const RPC_URL = process.env.RPC_URL || "https://sei-mainnet.infura.io";
+const RPC_URL = process.env.RPC_URL || "https://evm-rpc.sei-apis.com";
 const YEI_ADDRESS = '0x4a4d9abD36F923cBA0Af62A39C01dEC2944fb638';
 
 

@@ -4,7 +4,7 @@ import { createPublicClient, http } from "viem";
 import { sei } from "viem/chains";
 import takaraMarketAbi from "../../../../lib/abis/TakaraMarketState.json";
 
-const RPC_URL = process.env.RPC_URL || "https://sei-mainnet.infura.io";
+const RPC_URL = process.env.RPC_URL || "https://evm-rpc.sei-apis.com";
 const TAKARA_ADDRESS = "0x323917A279B209754B32Ab57a817c64ECfE2AF40";
 
 const client = createPublicClient({
