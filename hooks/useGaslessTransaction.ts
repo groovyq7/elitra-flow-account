@@ -12,7 +12,7 @@
  * The solver pays gas on behalf of the user.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   useSign7702Authorization,
   useWallets,
@@ -75,6 +75,23 @@ export function useGaslessTransaction() {
 
   const hasEmbedded = !!embeddedWallet;
 
+  // ── Unmount / cancellation guard ─────────────────────────────────────────
+  // The polling loop runs asynchronously. If the component that called
+  // executeGasless unmounts before polling completes, we must:
+  //   1. Stop calling onProgress (which likely calls setState on the
+  //      unmounted component, triggering React warnings and stale state).
+  //   2. Break out of the while loop to avoid wasting network requests.
+  // We use a ref (not state) because: (a) it doesn't trigger re-renders and
+  // (b) it is readable from inside the async callback without stale-closure issues.
+  const abortRef = useRef(false);
+
+  useEffect(() => {
+    abortRef.current = false;
+    return () => {
+      abortRef.current = true;
+    };
+  }, []);
+
   /**
    * Execute an array of on-chain calls via the EIP-7702 gasless flow.
    * The calls execute as the embedded wallet (the delegated EOA).
@@ -92,8 +109,14 @@ export function useGaslessTransaction() {
       tokenAmount: bigint,
       onProgress?: OnProgress,
     ): Promise<string> => {
+      // Guard all onProgress calls: if the component that started this
+      // transaction has unmounted (abortRef.current = true), skip the
+      // setState-triggering callback to prevent "can't update state on an
+      // unmounted component" warnings and stale state.
       const notify = (step: GaslessStep, message: string, extra?: Partial<GaslessProgress>) => {
-        onProgress?.({ step, message, ...extra });
+        if (!abortRef.current) {
+          onProgress?.({ step, message, ...extra });
+        }
       };
 
       // Prevent concurrent executions (nonce collision guard)
@@ -262,7 +285,8 @@ export function useGaslessTransaction() {
         while (
           stepStatus !== "success" &&
           stepStatus !== "completed" &&
-          pollAttempts < maxPolls
+          pollAttempts < maxPolls &&
+          !abortRef.current // Stop polling if component unmounted
         ) {
           await new Promise((r) => setTimeout(r, 3000));
           pollAttempts++;
@@ -321,6 +345,14 @@ export function useGaslessTransaction() {
 
         if (stepStatus === "success" || stepStatus === "completed") {
           notify("success", "Transaction successful!");
+          return intentId;
+        }
+
+        // If we exited the loop due to unmount/abort, don't throw — the
+        // transaction may still complete on-chain. The global lock is
+        // released in finally so subsequent calls aren't blocked.
+        if (abortRef.current) {
+          console.warn("[GaslessTx] Polling stopped — component unmounted. Transaction may still complete on-chain.");
           return intentId;
         }
 
