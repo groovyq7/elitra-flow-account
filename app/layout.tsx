@@ -14,6 +14,7 @@ import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { SpiceFlowProvider } from "@/components/providers/SpiceFlowProvider";
 import { GlobalModals } from "@/components/SpiceFlow/GlobalModals";
 import { TestWalletAutoConnect } from "@/components/providers/TestWalletProvider";
+import { WalletAddressSync } from "@/components/providers/WalletAddressSync";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -117,6 +118,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <PostHogProvider>
             <WagmiProviderWrapper>
+              <WalletAddressSync />
               <SpiceFlowProvider>
                 {process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true" && <TestWalletAutoConnect />}
                 {/* <CampaignRibbon /> — intentionally disabled; campaign/OG-pass period has ended */}

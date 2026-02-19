@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { useAccount } from "wagmi";
+import { useSpiceStore } from "@/store/useSpiceStore";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { trackDepositSuccess, trackDepositFailed, trackModalOpen } from "@/lib/analytics";
 // spiceflowConfig constants used by other components
@@ -26,7 +26,7 @@ interface SdkDepositProps {
 
 export const DepositFlow: React.FC = () => {
   const { isDepositOpen, closeDeposit, addDeposit } = useSpiceStore();
-  const { address: walletAddress } = useAccount();
+  const walletAddress = useSpiceStore((s) => s.connectedAddress);
 
   const [SdkDeposit, setSdkDeposit] = useState<React.ComponentType<SdkDepositProps> | null>(
     null

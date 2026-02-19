@@ -59,6 +59,10 @@ interface SpiceState {
   // Withdraw history
   withdrawHistory: WithdrawRecord[];
 
+  // Connected wallet address (set from outside SpiceFlowProvider via WalletAddressSync)
+  connectedAddress: `0x${string}` | undefined;
+  setConnectedAddress: (address: `0x${string}` | undefined) => void;
+
   // Actions
   openDeposit: () => void;
   closeDeposit: () => void;
@@ -88,6 +92,9 @@ interface SpiceState {
 export const useSpiceStore = create<SpiceState>()(
   persist(
     (set, get) => ({
+      connectedAddress: undefined,
+      setConnectedAddress: (address) => set({ connectedAddress: address }),
+
       isDepositOpen: false,
       isWithdrawOpen: false,
       isSupplyOpen: false,
