@@ -175,6 +175,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const handleAction = async () => {
     try {
       if (!address) throw new Error("Wallet not connected");
+      if (!withdrawToken) throw new Error("Vault not found for selected token");
 
       let withdrawResult;
       try {
@@ -348,7 +349,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           <Button
             className="w-full h-12 sm:h-14 text-base sm:text-lg"
             disabled={
-              !amount || Number(amount) <= 0 || isWithdrawLoading || isDisabled
+              !amount || Number(amount) <= 0 || isWithdrawLoading || isDisabled || !withdrawToken
             }
             onClick={async () => {
               handleAction();
