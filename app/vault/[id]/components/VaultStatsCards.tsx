@@ -1,8 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { formatAPY, formatTVL, formatSharePrice, shortenAddress } from "@/lib/utils/format";
+import type { Vault } from "@/lib/types";
 
 interface VaultStatsCardsProps {
-  vault: any;
+  vault: Vault;
 }
 
 export function VaultStatsCards({ vault }: VaultStatsCardsProps) {
@@ -11,7 +12,7 @@ export function VaultStatsCards({ vault }: VaultStatsCardsProps) {
       <Card className="bg-card border-border p-4 hover:border-primary/20 transition-all duration-300 hover:shadow-md">
         <div className="text-center">
           <div className="text-xl font-bold text-foreground mb-1">
-            {formatSharePrice(vault.sharePrice)}
+            {formatSharePrice(vault.rate ? Number(vault.rate) / 1e18 : 1)}
           </div>
           <div className="text-xs text-muted-foreground uppercase tracking-wider">
             Price

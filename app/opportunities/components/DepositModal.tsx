@@ -84,8 +84,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
       }
       try {
         setIsRateLoading(true);
-        const res: any = await getVaultRate(selectedVault.symbol, currentChain);
-        const priceData: any = await getTokenPrice(selectedVault.token0.symbol);
+        const res = await getVaultRate(selectedVault.symbol, currentChain);
+        const priceData = await getTokenPrice(selectedVault.token0.symbol);
         // res.rate may be a formatted decimal string or bigint depending on util implementation
         const rateBigInt: bigint = res.rateRaw ?? 0n;
         setTokenPrice(priceData.price);
@@ -406,7 +406,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 // Only approve, don't deposit - show loading spinner on button but no modal
                 try {
                   writeAllowance(parsedAmount);
-                } catch (err: any) {
+                } catch (err: unknown) {
                   toast.error("User rejected the approval transaction.");
                 }
               } else {

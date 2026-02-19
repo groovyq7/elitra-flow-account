@@ -53,16 +53,22 @@ function generateApyData(initialApy: number): ApyDataMap {
   return { "30d": d30, "6m": m6, "1y": y1, "3y": y3 };
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+interface RechartsTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number; dataKey?: string }>;
+  label?: string;
+}
+
+function CustomTooltip({ active, payload, label }: RechartsTooltipProps) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
         <p className="text-sm text-gray-600 mb-1">
-          {new Date(label).toLocaleDateString("en-US", {
+          {label ? new Date(label).toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
             day: "numeric",
-          })}
+          }) : ""}
         </p>
         <p className="text-sm font-semibold text-gray-900">
           {`${payload[0].value}%`}

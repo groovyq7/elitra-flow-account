@@ -2,7 +2,7 @@ import { fetchQuery } from "@/lib/utils/query";
 
 // Cache for user position queries (1 minute TTL)
 const USER_POS_TTL = 1;
-const userPosCache: Record<string, { data: UserVaultPositionResult | null; timestamp: number; error?: any }> = {};
+const userPosCache: Record<string, { data: UserVaultPositionResult | null; timestamp: number; error?: unknown }> = {};
 
 export interface UserVaultPositionResult {
   id: string;
@@ -30,7 +30,7 @@ const USER_POSITION_QUERY = `
   }
 `;
 
-function toBigIntSafe(v: any): bigint {
+function toBigIntSafe(v: unknown): bigint {
   try {
     if (v === null || v === undefined) return BigInt(0);
     if (typeof v === "bigint") return v;
@@ -71,7 +71,7 @@ export async function getUserVaultPositionFromSubgraph(userId: string, vaultId: 
     };
     userPosCache[key] = { data: parsed, timestamp: Date.now() };
     return { data: parsed, error: null, cached: false };
-  } catch (e: any) {
+  } catch (e: unknown) {
     userPosCache[key] = { data: null, timestamp: Date.now(), error: e };
     return { data: null, error: e, cached: false };
   }

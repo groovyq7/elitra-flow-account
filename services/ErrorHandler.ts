@@ -57,7 +57,7 @@ export class ErrorHandler {
   /**
    * Main error handler that checks for various error types.
    */
-  static handleError(error: any): string {
+  static handleError(error: unknown): string {
     const err = error as EthereumError
 
     // Explicit check for user rejection.
@@ -167,17 +167,18 @@ export class ErrorHandler {
   }
 
   // Specific error handlers for DEX operations.
-  static handleSwapError(error: any): string {
+  static handleSwapError(error: unknown): string {
     const handled = this.handleError(error)
     if (handled !== "An unexpected error occurred - please try again")
       return handled
+    const err = error as EthereumError
     const errorMessage =
-      error?.data?.message ||
-      error?.shortMessage ||
-      error?.cause?.shortMessage ||
-      error?.details ||
-      error?.cause?.details ||
-      error?.message
+      err?.data?.message ||
+      err?.shortMessage ||
+      err?.cause?.shortMessage ||
+      err?.details ||
+      err?.cause?.details ||
+      err?.message
     if (errorMessage?.includes("slippage") || errorMessage?.toLowerCase().includes("too little received")) {
       return "Price movement too high, increase slippage tolerance"
     }
@@ -185,17 +186,18 @@ export class ErrorHandler {
     return handled
   }
 
-  static handleApprovalError(error: any): string {
+  static handleApprovalError(error: unknown): string {
     const handled = this.handleError(error)
     if (handled !== "An unexpected error occurred - please try again")
       return handled
+    const err = error as EthereumError
     const errorMessage =
-      error?.data?.message ||
-      error?.shortMessage ||
-      error?.cause?.shortMessage ||
-      error?.details ||
-      error?.cause?.details ||
-      error?.message
+      err?.data?.message ||
+      err?.shortMessage ||
+      err?.cause?.shortMessage ||
+      err?.details ||
+      err?.cause?.details ||
+      err?.message
     if (errorMessage?.includes("approve")) {
       return "Token approval failed - check token permissions"
     }
@@ -203,17 +205,18 @@ export class ErrorHandler {
     return handled
   }
 
-  static handleBalanceError(error: any): string {
+  static handleBalanceError(error: unknown): string {
     const handled = this.handleError(error)
     if (handled !== "An unexpected error occurred - please try again")
       return handled
+    const err = error as EthereumError
     const errorMessage =
-      error?.data?.message ||
-      error?.shortMessage ||
-      error?.cause?.shortMessage ||
-      error?.details ||
-      error?.cause?.details ||
-      error?.message
+      err?.data?.message ||
+      err?.shortMessage ||
+      err?.cause?.shortMessage ||
+      err?.details ||
+      err?.cause?.details ||
+      err?.message
     if (errorMessage?.includes("balance")) {
       return "Insufficient balance for transaction"
     }

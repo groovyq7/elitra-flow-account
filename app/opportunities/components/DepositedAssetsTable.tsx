@@ -137,7 +137,7 @@ export function DepositedAssetsTable({
               .filter((token) => token.symbol?.toUpperCase().includes("WBTC") || token.symbol?.toUpperCase().includes("BTC") || token.symbol?.toUpperCase().includes("CBTC"))
               .map((token) => {
                 const vault = availableVaults.find(
-                  (v: any) => v.id === token.token.address
+                  (v: Vault) => v.id === token.token.address
                 );
                 return (
                   <tr key={token.symbol} className="border-b last:border-0">

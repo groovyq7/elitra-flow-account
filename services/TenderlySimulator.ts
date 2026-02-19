@@ -229,10 +229,11 @@ export class TenderlySimulator {
         estimatedGasUsed,
         simulationStatus: SimulationStatus.Succeeded,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       return {
         simulationStatus: SimulationStatus.Failed,
-        error: breakDownTenderlySimulationError(error.message),
+        error: breakDownTenderlySimulationError(msg),
       }
     }
   }

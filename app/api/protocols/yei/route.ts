@@ -16,7 +16,7 @@ const client = createPublicClient({ chain: sei, transport: http(RPC_URL) });
 
 const RAY = 1e27; // 1e27 scaler
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(n, max));
-const toNum = (v: unknown) => Number(v as any);
+const toNum = (v: unknown) => Number(v);
 
 function computeUtilizationRate(totalBorrows: bigint, totalSupply: bigint): number {
   if (totalSupply === 0n) return 0;
@@ -67,7 +67,8 @@ export async function GET(req: Request) {
         continue;
       }
       try {
-        const data: any = await client.readContract({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data: any = await client.readContract({ // ABI-decoded reserve data struct — no generated type
           address: YEI_ADDRESS as `0x${string}`,
           abi: yeiMarketAbi,
           functionName: 'getReserveData',

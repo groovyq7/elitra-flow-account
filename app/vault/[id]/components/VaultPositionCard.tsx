@@ -4,10 +4,11 @@ import { Zap, Info, ArrowDownToLine } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import type { Vault } from "@/lib/types";
 
 interface VaultPositionCardProps {
   userAssetValue: number;
-  vault: any;
+  vault: Vault;
   depositAmount: string;
   setDepositAmount: (v: string) => void;
   handleDeposit: () => void;

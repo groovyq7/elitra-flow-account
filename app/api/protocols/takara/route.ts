@@ -44,7 +44,8 @@ export async function GET(req: Request) {
 
     // Minimal liquidity score
     function calculateLiquidityScore(
-      market: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      market: any, // ABI-decoded market struct — viem returns unknown shape
       utilizationRate: number,
       price: string
     ): number {
@@ -102,7 +103,8 @@ export async function GET(req: Request) {
       risk: "low" | "moderate" | "high";
     }> = [];
 
-    for (const market of takaraMarkets as any[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const market of takaraMarkets as any[]) { // ABI-decoded tuple array — no generated type available
       const underlying =
         (market.underlying as string | undefined)?.toLowerCase() || "";
 

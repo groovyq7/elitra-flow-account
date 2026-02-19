@@ -3,8 +3,22 @@
 import { useMemo } from "react";
 import { useChainId } from "wagmi";
 import { getVaultsByChain } from "@/lib/contracts/vault-registry";
-import type { Vault } from "@/lib/types";
+import type { Vault, VaultRateSnapshot } from "@/lib/types";
 import { useQuery } from "./useQuery";
+
+/** Raw shape returned by the subgraph for each Vault record */
+interface VaultMetricsRaw {
+  id: string;
+  apy: number | null;
+  rate: string | null;
+  tvl: number | null;
+  totalSupply: string | null;
+  totalAssetDepositedRaw: string | null;
+  totalAssetWithdrawnRaw: string | null;
+  depositsCount: number | null;
+  withdrawalsCount: number | null;
+  rateSnapshots: VaultRateSnapshot[];
+}
 
 // GraphQL queries mirroring those used in vault-registry enrichment
 const VAULT_METRICS_QUERY = `
@@ -44,15 +58,15 @@ const SINGLE_VAULT_QUERY = `
 interface UseVaultListSubgraphResult {
   vaults: Vault[];
   isLoading: boolean;
-  error: any;
-  refetch: (vars?: Record<string, any>) => Promise<any> | void;
+  error: unknown;
+  refetch: (vars?: Record<string, unknown>) => Promise<unknown> | void;
 }
 
 interface UseVaultDetailsSubgraphResult {
   vault: Vault | undefined;
   isLoading: boolean;
-  error: any;
-  refetch: (vars?: Record<string, any>) => Promise<any> | void;
+  error: unknown;
+  refetch: (vars?: Record<string, unknown>) => Promise<unknown> | void;
 }
 
 /**
@@ -66,14 +80,14 @@ export function useVaultListSubgraph(): UseVaultListSubgraphResult {
   const ids = useMemo(() => baseVaults.map(v => v.id.toLowerCase()), [baseVaults]);
 
   const pause = ids.length === 0;
-  const [result, refetch] = useQuery<{ Vault: any[] }>({
+  const [result, refetch] = useQuery<{ Vault: VaultMetricsRaw[] }>({
     query: VAULT_METRICS_QUERY,
     variables: { ids },
     pause,
   });
 
   const metricsMap = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, VaultMetricsRaw> = {};
     (result.data?.Vault || []).forEach(m => {
       map[m.id.toLowerCase()] = m;
     });
@@ -121,7 +135,7 @@ export function useVaultDetailsSubgraph(vaultId?: string): UseVaultDetailsSubgra
   const lowerId = vaultId?.toLowerCase();
   const pause = !lowerId || !base;
 
-  const [result, refetch] = useQuery<{ Vault: any[] }>({
+  const [result, refetch] = useQuery<{ Vault: VaultMetricsRaw[] }>({
     query: SINGLE_VAULT_QUERY,
     variables: { id: lowerId },
     pause,

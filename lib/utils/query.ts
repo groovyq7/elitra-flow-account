@@ -3,8 +3,11 @@ import { GraphQLClient } from "graphql-request"
 
 // Extend each cache entry with a timestamp and (optionally) an AbortController.
 interface CacheEntry {
-  data?: any
-  error?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any // GraphQL responses are dynamically typed — callers cast via generics
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error?: any // Error type from fetch/graphql is unpredictable at the cache layer
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   promise?: Promise<{ data: any; error: any }>
   timestamp?: number
   abortController?: AbortController
@@ -34,10 +37,11 @@ export const graphClient = new GraphQLClient(graphEndpoint, {
  */
 export async function fetchQuery(
   query: string,
-  variables: Record<string, any>,
+  variables: Record<string, unknown>,
   signal?: AbortSignal,
   cacheDuration = CACHE_DURATION,
-): Promise<{ data: any; error: any }> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<{ data: any; error: any }> { // data shape depends on the query — typed by callers via generics
   const key = query + JSON.stringify(variables)
   const now = Date.now()
 
@@ -84,7 +88,8 @@ export async function fetchQuery(
 
   try {
     
-    let gqlResult: any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let gqlResult: any // shape determined by query at runtime
     if (shouldUseGraphOnClient) {
       // Use manual fetch to avoid any persisted query extensions automatically added by libs
       const body = JSON.stringify({ query, variables })
@@ -127,9 +132,9 @@ export async function fetchQuery(
     entry.promise = undefined
     
     return { data: entry.data, error: entry.error }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If the error is due to aborting, remove the cache entry.
-    if (error.name === "AbortError") {
+    if (error instanceof Error && error.name === "AbortError") {
       cache.delete(key)
     } else {
       entry.error = error

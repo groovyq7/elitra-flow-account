@@ -20,9 +20,9 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(result.data, { status: 200 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.toString() },
+      { error: String(error) },
       { status: 500 }
     );
   }

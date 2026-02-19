@@ -38,8 +38,9 @@ export async function addCampaignRegistration(
       created_at: doc?.created_at || new Date(),
     })
     return result
-  } catch (error: any) {
-    console.error("Error adding campaign registration: " + error.message)
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Error adding campaign registration: " + msg)
     return null
   }
 }

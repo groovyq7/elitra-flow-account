@@ -128,7 +128,7 @@ export function AvailableAssetsTable({
               .filter((token) => token.symbol?.toUpperCase().includes("WBTC") || token.symbol?.toUpperCase().includes("BTC"))
               .map((token) => {
                 const vault = availableVaults.find(
-                  (v: any) =>
+                  (v: Vault) =>
                     v.token0?.symbol === token.symbol ||
                     v.token1?.symbol === token.symbol
                 );

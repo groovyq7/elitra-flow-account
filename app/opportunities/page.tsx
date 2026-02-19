@@ -74,7 +74,7 @@ export default function OpportunitiesPage() {
   const { openDeposit, openSupply, openWithdraw, crossChainBalance } = useSpiceStore();
 
   // Calculate total APY from tokenInfos (weighted average)
-  const calculateTotalAPY = (tokenInfos: any[]) => {
+  const calculateTotalAPY = (tokenInfos: TokenInfo[]) => {
     if (!tokenInfos || tokenInfos.length === 0) return 0;
 
     const totalValue = tokenInfos.reduce(

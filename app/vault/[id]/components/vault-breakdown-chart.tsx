@@ -63,11 +63,16 @@ export function VaultBreakdownChart({
     tvl: (totalTvl * item.percentage) / 100,
   }));
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface BreakdownTooltipProps {
+    active?: boolean;
+    payload?: Array<{ payload: { protocol: string; percentage: number; tvl: number } }>;
+  }
+
+  const CustomTooltip = ({ active, payload }: BreakdownTooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const idx = chartData.findIndex((d) => d.protocol === data.protocol);
-      const apiApy = (breakdownData?.[idx] as any)?.apy as number | undefined;
+      const apiApy = (breakdownData?.[idx] as { apy?: number } | undefined)?.apy;
       const displayApy = apiApy === 0 || apiApy == null ? apy : apiApy;
       return (
         <div className="bg-card border border-border rounded-lg p-4 shadow-xl backdrop-blur-sm">

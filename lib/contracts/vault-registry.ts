@@ -1,7 +1,21 @@
-import type { Vault } from "@/lib/types";
+import type { Vault, VaultRateSnapshot } from "@/lib/types";
 import { zeroAddress } from "viem";
 import { fetchQuery, cache as gqlCache } from "@/lib/utils/query";
 import { computeApy24hLinear } from "../utils/apy";
+
+/** Raw vault metrics shape returned by the subgraph */
+interface VaultMetricsRaw {
+  id: string;
+  apy: number | null;
+  rate: string | null;
+  tvl: number | null;
+  totalSupply: string | null;
+  totalAssetDepositedRaw: string | null;
+  totalAssetWithdrawnRaw: string | null;
+  depositsCount: number | null;
+  withdrawalsCount: number | null;
+  rateSnapshots: VaultRateSnapshot[];
+}
 
 // Local cache wrapper for enriched vault data (subgraph + static)
 const enrichedVaultCache: Record<
@@ -262,8 +276,8 @@ export async function getVaultsByChainWithSubgraph(
     const ids = baseVaults.map((v) => v.id.toLowerCase());
     const { data, error } = await fetchQuery(VAULT_METRICS_QUERY, { ids });
     if (error) throw error;
-    const metricsById: Record<string, any> = {};
-    (data?.Vault || []).forEach((m: any) => {
+    const metricsById: Record<string, VaultMetricsRaw> = {};
+    (data?.Vault as VaultMetricsRaw[] || []).forEach((m: VaultMetricsRaw) => {
       metricsById[m.id.toLowerCase()] = m;
     });
 
@@ -375,7 +389,7 @@ export async function getVaultByIdWithSubgraph(
       id: vaultId.toLowerCase(),
     });
     if (error) throw error;
-    const m = data?.Vault?.[0];
+    const m = (data?.Vault as VaultMetricsRaw[] | undefined)?.[0];
     let apy24h = 0;
     if (m?.rateSnapshots && m.rateSnapshots.length > 1) {
       apy24h = Number(computeApy24hLinear(m.rateSnapshots).apy ?? 0);

@@ -12,10 +12,10 @@ const graphClient = new GraphQLClient(GRAPHQL_ENDPOINT, {
   },
 });
 
-export async function backendQuery<T = any>(
+export async function backendQuery<T = unknown>(
   query: string,
-  variables?: Record<string, any>
-): Promise<{ data?: T; error?: any }> {
+  variables?: Record<string, unknown>
+): Promise<{ data?: T; error?: unknown }> {
   try {
     const data = await graphClient.request<T>(query, variables);
     return { data };

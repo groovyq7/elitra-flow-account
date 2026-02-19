@@ -82,11 +82,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       }
       try {
         setIsRateLoading(true);
-        const rateData: any = await getVaultRate(
+        const rateData = await getVaultRate(
           selectedVault.symbol,
           currentChain
         );
-        const priceData: any = await getTokenPrice(selectedVault.token0.symbol);
+        const priceData = await getTokenPrice(selectedVault.token0.symbol);
         if (!cancelled) {
           setVaultRate(rateData.rateRaw as bigint);
           setTokenPrice(priceData.price);
@@ -206,11 +206,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         //if (withdrawHash) setTxHash(withdrawHash);
         setTxStatus("loading");
         setTxModalOpen(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         setTxStatus("error");
         setTxModalOpen(true);
         trackWithdrawFailed({
-          reason: err?.message,
+          reason: err instanceof Error ? err.message : String(err),
           tokenSymbol: selectedToken.symbol,
           amountWei: String(parsedAmount),
           amount,
@@ -218,11 +218,11 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
         });
         return;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTxStatus("error");
       setTxModalOpen(true);
       trackWithdrawFailed({
-        reason: err?.message,
+        reason: err instanceof Error ? err.message : String(err),
         tokenSymbol: selectedToken.symbol,
         amountWei: String(parsedAmount),
         amount,

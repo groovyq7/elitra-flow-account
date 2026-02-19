@@ -3,14 +3,14 @@ import { useState, useEffect, useCallback } from "react"
 
 export interface UseQueryArgs {
   query: string
-  variables?: Record<string, any>
+  variables?: Record<string, unknown>
   pause?: boolean
 }
 
-export interface QueryResult<T = any> {
+export interface QueryResult<T = unknown> {
   data: T | null
   fetching: boolean
-  error: any
+  error: unknown
 }
 
 /**
@@ -20,13 +20,13 @@ export interface QueryResult<T = any> {
  * - Otherwise, it uses the cache (with expiration) and cancellation logic.
  * - The effect’s dependency key is based on query + JSON.stringify(variables) + pause.
  */
-export function useQuery<T = any>({
+export function useQuery<T = unknown>({
   query,
   variables = {},
   pause = false,
 }: UseQueryArgs): [
   QueryResult<T>,
-  (newVariables?: Record<string, any>) => void,
+  (newVariables?: Record<string, unknown>) => void,
 ] {
   // Validate the query.
   if (!query || typeof query !== "string" || query.trim() === "") {

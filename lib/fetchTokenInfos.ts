@@ -1,3 +1,4 @@
+import type { Chain } from "viem";
 import { getTokenImage } from "@/lib/utils";
 import {
   getTokenBalance,
@@ -11,7 +12,7 @@ import { VAULTS } from "./contracts/vault-registry";
 export async function fetchTokenInfos(
   tokens: Array<TokenType>,
   address: `0x${string}` | undefined,
-  chain: any,
+  chain: Chain,
   vaultsData?: Vault[]
 ): Promise<TokenInfo[]> {
   const balances = await Promise.all(

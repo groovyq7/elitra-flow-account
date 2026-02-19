@@ -1,3 +1,8 @@
+export interface VaultRateSnapshot {
+  rate: string;
+  timestamp: number;
+}
+
 export interface Vault {
   id: string;
   name: string;
@@ -16,6 +21,15 @@ export interface Vault {
   shortDescription?: string;
   breakdown?: VaultBreakdown[]; // Added optional breakdown field
   chainId?: number; // Added chainId field to support multi-chain vaults
+  // Subgraph-enriched fields (optional, populated at runtime)
+  rate?: bigint;
+  tvl?: number;
+  totalSupply?: bigint;
+  depositsCount?: number;
+  withdrawalsCount?: number;
+  rateSnapshots?: VaultRateSnapshot[];
+  totalAssetDepositedRaw?: string;
+  totalAssetWithdrawnRaw?: string;
 }
 
 export interface UserPosition {

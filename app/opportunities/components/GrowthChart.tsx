@@ -200,10 +200,10 @@ export function GrowthChart({
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     const holding = payload.find(
-                      (p: any) => p.dataKey === "holding"
+                      (p) => p.dataKey === "holding"
                     );
                     const staking = payload.find(
-                      (p: any) => p.dataKey === "staking"
+                      (p) => p.dataKey === "staking"
                     );
                     return (
                       <div className="bg-white p-3 border rounded-lg shadow-lg">
