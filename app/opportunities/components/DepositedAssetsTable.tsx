@@ -15,22 +15,16 @@ import { UserPnlInfo } from "@/lib/types";
 import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
-import { TokenInfo, TokenType, Vault } from "@/lib/types";
+import { TokenInfo, Vault } from "@/lib/types";
 
 export function DepositedAssetsTable({
   tokenInfos,
   availableVaults,
   fullWidth = false,
-  setSelectedToken,
-  setModalType,
-  setIsModalOpen,
 }: {
   tokenInfos: TokenInfo[];
   availableVaults: Vault[];
   fullWidth?: boolean;
-  setSelectedToken: (token: TokenType) => void;
-  setModalType: (type: "deposit") => void;
-  setIsModalOpen: (isOpen: boolean) => void;
 }) {
   const { isConnected, address } = useAccount();
   const chain = useConfig().getClient().chain;

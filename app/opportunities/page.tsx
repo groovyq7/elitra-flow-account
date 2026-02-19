@@ -637,9 +637,6 @@ export default function OpportunitiesPage() {
                       tokenInfos={Array.isArray(tokenInfos) ? tokenInfos : []}
                       availableVaults={availableVaults}
                       fullWidth={!showGrowthChart}
-                      setModalType={setModalType}
-                      setSelectedToken={setSelectedToken}
-                      setIsModalOpen={setIsModalOpen}
                     />
                   )}
 
@@ -650,9 +647,6 @@ export default function OpportunitiesPage() {
                       }
                       availableVaults={availableVaults}
                       fullWidth={!showGrowthChart}
-                      setModalType={setModalType}
-                      setSelectedToken={setSelectedToken}
-                      setIsModalOpen={setIsModalOpen}
                     />
                   )}
 

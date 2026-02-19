@@ -22,7 +22,7 @@ import {
 } from "@spicenet-io/spiceflow-ui";
 import { getTargetAddresses } from "@/lib/utils/chains";
 import { useSpiceStore } from "@/store/useSpiceStore";
-import { TokenInfo, TokenType, Vault } from "@/lib/types";
+import { TokenInfo, Vault } from "@/lib/types";
 
 const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
@@ -30,16 +30,10 @@ export function AvailableAssetsTable({
   tokenInfos,
   availableVaults,
   fullWidth = false,
-  setSelectedToken,
-  setModalType,
-  setIsModalOpen,
 }: {
   tokenInfos: TokenInfo[];
   availableVaults: Vault[];
   fullWidth?: boolean;
-  setSelectedToken: (token: TokenType) => void;
-  setModalType: (type: "deposit") => void;
-  setIsModalOpen: (isOpen: boolean) => void;
 }) {
   const { isConnected } = useAccount();
   const { openDeposit, openSupply, crossChainBalance } = useSpiceStore();
