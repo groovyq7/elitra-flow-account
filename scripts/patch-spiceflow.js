@@ -1,7 +1,17 @@
 #!/usr/bin/env node
 /**
- * Patches @spicenet-io/spiceflow-ui SDK to fix issues when used with
- * an external wallet (RainbowKit) instead of Privy's embedded wallet.
+ * ============================================================
+ * patch-spiceflow.js — SDK patch script for @spicenet-io/spiceflow-ui
+ * ============================================================
+ *
+ * TARGET SDK VERSION: 1.11.13
+ * Patches are applied to the minified bundle at:
+ *   node_modules/@spicenet-io/spiceflow-ui/dist/index.js
+ *   node_modules/@spicenet-io/spiceflow-ui/dist/index.cjs.js
+ *
+ * WHY WE PATCH INSTEAD OF FORKING:
+ *   The SDK is closed-source. Patching the minified bundle is the only
+ *   option to fix integration issues without maintaining a full fork.
  *
  * ROOT CAUSE: The SDK's SpiceFlowProvider wraps children in Privy's
  * PrivyProvider, which installs its own internal WagmiProvider. When
@@ -14,17 +24,32 @@
  * prop. When provided, use it instead of useAccount() results internally.
  * The hook is still called (React rules), but its result is overridden.
  *
+ * HOW TO UPDATE WHEN THE SDK VERSION CHANGES:
+ *   1. Bump EXPECTED_VERSION below to match the new SDK version.
+ *   2. Run `npm install` — the postinstall will fail with pattern errors.
+ *   3. Diff the new minified bundle vs old to find changed patterns.
+ *   4. Update each patch() call's oldPattern / newPattern as needed.
+ *   5. Update the verify() calls to match the new expected patterns.
+ *   6. Run `npm run postinstall` manually and confirm all VERIFIED lines pass.
+ *   7. Update the SDK version pin in package.json to match.
+ *
  * Patches applied:
- *
- * 1. closeOnSelect: SelectChainModal closes entire deposit flow on chain
- *    select. Fix: inject closeOnSelect:false.
- *
- * 2. skip-privy: In 7702 mode, SDK navigates to "provider-login" (Privy
- *    auth) after chain selection. Fix: skip to "connect-wallet" directly.
- *
- * 3. external-wallet-override: Make Mr (SpiceDeposit inner) accept
- *    externalWalletAddress prop. When provided, override useAccount()
- *    results so isConnected=true and address=externalWalletAddress.
+ *   1. closeOnSelect:false — prevent SelectChainModal from closing the
+ *      entire deposit flow on chain select.
+ *   2. skip-privy — skip "provider-login" (Privy auth) step, go straight
+ *      to "connect-wallet" after chain selection.
+ *   3. external-wallet-override — add externalWalletAddress prop to
+ *      SpiceDeposit inner (Mr), override useAccount() with IIFE.
+ *   4. skip-connect-wallet — skip "connect-wallet" step when wallet is
+ *      already connected (isConnected=true from override).
+ *   5. sn-wallet-check — fix wallet-connected check in deposit form (sn)
+ *      to consider externalWalletAddress in 7702 mode.
+ *   6. sn-skip-privy-exec — skip Privy auth checks during deposit
+ *      execution when an external wallet is provided.
+ *   7. sn-bypass-privy-auth-btn — bypass "Authentication Required" button
+ *      text when external wallet is connected.
+ *   8. sn-7702-address-fallback — use externalWalletAddress as fallback
+ *      for the embedded wallet address in 7702 deposit execution.
  *
  * Run automatically via: npm run postinstall
  */
@@ -39,6 +64,33 @@ const SDK_DIR = path.join(
   "spiceflow-ui",
   "dist"
 );
+
+// ── SDK version guard ────────────────────────────────────────────────────────
+// These patches are tightly coupled to the minified output of a specific SDK
+// version. If the SDK is upgraded, patterns may silently fail to apply,
+// breaking the deposit flow. Fail fast here instead of at runtime.
+const EXPECTED_VERSION = "1.11.13";
+const sdkPkgPath = path.join(SDK_DIR, "..", "package.json");
+if (!fs.existsSync(sdkPkgPath)) {
+  console.error(
+    `[patch-spiceflow] ERROR: SDK package.json not found at ${sdkPkgPath}. ` +
+      "Run npm install first."
+  );
+  process.exit(1);
+}
+const installedVersion = JSON.parse(
+  fs.readFileSync(sdkPkgPath, "utf-8")
+).version;
+if (installedVersion !== EXPECTED_VERSION) {
+  console.error(
+    `[patch-spiceflow] ERROR: Expected SDK version ${EXPECTED_VERSION}, ` +
+      `got ${installedVersion}. Patches may not apply correctly. ` +
+      "Update scripts/patch-spiceflow.js if you intentionally upgraded the SDK " +
+      "(see HOW TO UPDATE section at the top of this file)."
+  );
+  process.exit(1);
+}
+console.log(`[patch-spiceflow] SDK version ${installedVersion} confirmed.`);
 
 function patch(file, oldPattern, newPattern, label) {
   const filePath = path.join(SDK_DIR, file);
@@ -60,6 +112,27 @@ function patch(file, oldPattern, newPattern, label) {
   content = content.split(oldPattern).join(newPattern);
   fs.writeFileSync(filePath, content);
   console.log(`[patch-spiceflow] Patched ${file} (${label})`);
+}
+
+/**
+ * Verify that a patched pattern is present in the output file.
+ * Called after all patches run. Exits with code 1 on failure so the
+ * build fails loudly rather than shipping a silently broken SDK.
+ */
+function verify(file, expectedPattern, label) {
+  const filePath = path.join(SDK_DIR, file);
+  if (!fs.existsSync(filePath)) {
+    console.error(`[patch-spiceflow] VERIFY FAIL: ${file} not found`);
+    process.exit(1);
+  }
+  const content = fs.readFileSync(filePath, "utf-8");
+  if (!content.includes(expectedPattern)) {
+    console.error(
+      `[patch-spiceflow] VERIFY FAIL: ${label} — expected pattern not found in ${file}`
+    );
+    process.exit(1);
+  }
+  console.log(`[patch-spiceflow] VERIFIED: ${label}`);
 }
 
 // --- Fix 1: closeOnSelect:false on SelectChainModal inside SpiceDeposit ---
@@ -195,6 +268,13 @@ patch(
 // wallet. When G/O (= externalWalletAddress copy) exists, skip these checks.
 //   if(!_ && !G) { ... }  (ESM)
 //   if(!$ && !O) { ... }  (CJS)
+//
+// NOTE: The `console.log("IS NON 7702", ...)` calls below originate from the
+// SDK's own source code — they are not added by this patch script. We preserve
+// them in the patched output because modifying around them is unavoidable.
+// These logs appear in production builds of the SDK; they are not our concern
+// to remove (that would require a separate SDK release). If they become noisy,
+// open a ticket with @spicenet-io.
 
 patch(
   "index.js",
@@ -309,3 +389,35 @@ patch(
   "sender:O||W,receiver:",
   "sn-7702-sender-cjs"
 );
+
+// ── Verification step ────────────────────────────────────────────────────────
+// After all patches run, verify the key new patterns are present in both
+// bundle files. If any check fails, exit(1) to fail the build immediately.
+
+// Fix 1: closeOnSelect:false
+verify("index.js",    "closeOnSelect:false",            "closeOnSelect — ESM");
+verify("index.cjs.js","closeOnSelect:false",            "closeOnSelect — CJS");
+
+// Fix 2: skip provider-login (no ternary, straight to connect-wallet)
+verify("index.js",    'W("connect-wallet")',            "skip-privy (connect-wallet direct) — ESM");
+verify("index.cjs.js",'j("connect-wallet")',            "skip-privy (connect-wallet direct) — CJS");
+
+// Fix 3: externalWalletAddress prop + IIFE override
+verify("index.js",    "__extAddr",                      "externalWalletAddress prop — ESM");
+verify("index.cjs.js","__extAddr",                      "externalWalletAddress prop — CJS");
+verify("index.js",    "__extAddr?{isConnected:!0",      "useAccount() IIFE override — ESM");
+verify("index.cjs.js","__extAddr?{isConnected:!0",      "useAccount() IIFE override — CJS");
+
+// Fix 5: wallet-connected check includes external address in 7702 mode
+verify("index.js",    "re=_?!!g:!!g||m&&y&&!!Z",       "sn-wallet-check — ESM");
+verify("index.cjs.js","se=$?!!x:!!x||f&&m&&!!J",       "sn-wallet-check — CJS");
+
+// Fix 6: skip Privy auth guard when external wallet present
+verify("index.js",    "!_&&!G){if(!D||!Z)",            "sn-skip-privy-exec — ESM");
+verify("index.cjs.js","!$&&!O){if(!W||!J)",            "sn-skip-privy-exec — CJS");
+
+// Fix 8: external wallet fallback for 7702 deposit addresses
+verify("index.js",    "user:G||D,isDeposit:!0",        "sn-7702-submit-user — ESM");
+verify("index.cjs.js","user:O||W,isDeposit:!0",        "sn-7702-submit-user — CJS");
+
+console.log("[patch-spiceflow] All patches applied and verified.");

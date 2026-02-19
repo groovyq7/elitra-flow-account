@@ -19,6 +19,11 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
+        # npm ci runs the postinstall script (scripts/patch-spiceflow.js).
+        # That script verifies the SDK version and all patch patterns after applying them.
+        # If any patch fails to apply or the SDK version doesn't match, the script calls
+        # process.exit(1), which fails this step immediately. No separate verification
+        # step is needed — a passing npm ci guarantees all patches applied correctly.
         run: npm ci
 
       - name: TypeScript type check
