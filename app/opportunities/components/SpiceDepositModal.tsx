@@ -152,13 +152,20 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
     if (open) {
       setStep("chain-select");
       setSelectedChainId(null);
+      setConversionRate(0); // clear stale rate so it re-fetches when asset is selected
     }
   }, [open]);
 
   const handleChainSelect = (chainId: number | undefined) => {
     if (!chainId) return;
     setSelectedChainId(chainId);
-    setStep("cross-chain-deposit");
+    // Citrea (5115) is the destination chain — user already has funds here,
+    // so skip the cross-chain bridging step and go straight to vault deposit.
+    if (chainId === 5115) {
+      setStep("vault-deposit");
+    } else {
+      setStep("cross-chain-deposit");
+    }
   };
 
   const handleClose = () => {
