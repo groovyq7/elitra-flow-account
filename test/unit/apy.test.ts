@@ -191,4 +191,39 @@ describe("computeApy24hLinearCurrentDenom", () => {
     const result = computeApy24hLinearCurrentDenom(snapshots, now);
     expect(parseFloat(result.apy!)).toBeLessThan(0);
   });
+
+  it("clamps extreme positive apy to MAX_ABS (1e21 = ~1000%)", () => {
+    // Both snapshots are within the 3-day cutoff, so the fallback anchor is used
+    // producing a very short dt (98s). A 2x rate change over 98s annualizes far
+    // beyond MAX_ABS and must be clamped.
+    const now = 1_700_000_000;
+    const snapshots = [
+      { rate: 2n * ONE, timestamp: now - 1 },  // latest
+      { rate: ONE,      timestamp: now - 99 }, // anchor (fallback — no snapshot at/before cutoff)
+    ];
+    const result = computeApy24hLinearCurrentDenom(snapshots, now);
+    // Clamped value: MAX_ABS = 1e21 → formatUnits(1e21, 18) = "1000"
+    expect(parseFloat(result.apy!)).toBeLessThanOrEqual(1000);
+    expect(result.apyScaled).toBe(BigInt("1000000000000000000000")); // MAX_ABS
+  });
+
+  it("returns undefined when r1 is zero (guard against division by zero)", () => {
+    const now = 1_700_000_000;
+    // r1=0 triggers the `r1 <= 0n` guard
+    const snapshots = [
+      { rate: 0n, timestamp: now - 1 },
+      { rate: ONE, timestamp: now - 86400 * 3 },
+    ];
+    const result = computeApy24hLinearCurrentDenom(snapshots, now);
+    expect(result.apy).toBeUndefined();
+  });
+
+  it("returns undefined for a single snapshot (no window)", () => {
+    const now = 1_700_000_000;
+    const result = computeApy24hLinearCurrentDenom(
+      [{ rate: ONE, timestamp: now - 1 }],
+      now
+    );
+    expect(result.apy).toBeUndefined();
+  });
 });
