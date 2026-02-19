@@ -8,6 +8,7 @@ import { encodeFunctionData, parseUnits } from "viem";
 import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
 import { getAddresses } from "@/lib/constants";
 import { ChainBatch } from "@/lib/types";
+import { trackWithdrawSuccess } from "@/lib/analytics";
 
 const SOLVER_ADDRESS = "0x111115763723B53395308eC4c9AB9d5FB0844cae" as `0x${string}`;
 
@@ -190,6 +191,12 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
 
   // Complete — fires event only on successful withdrawal
   const handleComplete = () => {
+    trackWithdrawSuccess({
+      type: 'spice_withdraw',
+      tokenSymbol,
+      destination,
+      chainId: selectedChainId ?? 5115,
+    });
     window.dispatchEvent(new CustomEvent("crosschain-withdraw-complete", { detail: { tokenSymbol } }));
     onOpenChange(false);
   };
