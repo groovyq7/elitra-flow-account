@@ -178,19 +178,21 @@ export function DepositedAssetsTable({
                     </td>
                     <td className="py-2 px-2 text-right">
                       <div className="font-medium flex gap-2 items-center justify-end">
-                        <Button
-                          className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
-                          onClick={() => {
-                            openWithdraw();
-                            trackModalOpen("spicewithdraw", {
-                              source: "deposited_table",
-                              token: token.symbol,
-                              to: "collateral",
-                            });
-                          }}
-                        >
-                          Withdraw
-                        </Button>
+                        {clientConnected && (
+                          <Button
+                            className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200"
+                            onClick={() => {
+                              openWithdraw();
+                              trackModalOpen("spicewithdraw", {
+                                source: "deposited_table",
+                                token: token.symbol,
+                                to: "collateral",
+                              });
+                            }}
+                          >
+                            Withdraw
+                          </Button>
+                        )}
 
                         <Link
                           href={`/vault/${token?.token.address}`}

@@ -194,7 +194,7 @@ export function AvailableAssetsTable({
                       </div>
                     </td>
                     <td className="py-2 px-2 text-right">
-                      {vault && (
+                      {vault && clientConnected && (
                         <div className="font-medium flex gap-2 items-center justify-end">
                           <Button
                             className="rounded-md text-white text-xs font-semibold bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all duration-200 flex items-center gap-1"
