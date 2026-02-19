@@ -29,10 +29,16 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://elitra.xyz"),
   title: "Elitra - Activate Idle Crypto Instantly",
+  description:
+    "Activate idle crypto. Elitra securely routes idle assets into vetted DeFi protocols with automated risk-managed yields.",
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
+  },
+  alternates: {
+    canonical: "https://elitra.xyz",
   },
   openGraph: {
     title: "Elitra - Activate Idle Crypto Instantly",
@@ -49,8 +55,13 @@ export const metadata: Metadata = {
     ],
     siteName: "Elitra",
   },
-  description:
-    "Activate idle crypto. Elitra securely routes idle assets into vetted DeFi protocols with automated risk-managed yields.",
+  twitter: {
+    card: "summary_large_image",
+    title: "Elitra - Activate Idle Crypto Instantly",
+    description:
+      "Activate idle crypto. Elitra securely routes idle assets into vetted DeFi protocols with automated risk-managed yields.",
+    images: ["https://elitra.xyz/og-image.png"],
+  },
 };
 
 export default function RootLayout({
@@ -108,7 +119,7 @@ export default function RootLayout({
             <WagmiProviderWrapper>
               <SpiceFlowProvider>
                 {process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true" && <TestWalletAutoConnect />}
-                {/* <CampaignRibbon /> */}
+                {/* <CampaignRibbon /> — intentionally disabled; campaign/OG-pass period has ended */}
                 <MainNav />
                 {children}
                 <GlobalModals />
