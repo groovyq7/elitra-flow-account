@@ -237,13 +237,13 @@ export const DepositModal: React.FC<DepositModalProps> = ({
           tellerAddress: vaultAddresses.tellerAddress,
         })
         if (depositTokenAddress === zeroAddress) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi type doesn't infer `value` from JSON ABI payable mutability
           depositResult = writeDeposit({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
             args: [NATIVE_TOKEN_ADDRESS[chainId], parsedAmount, 1n],
             value: parsedAmount,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi type doesn't infer `value` from JSON ABI payable mutability
           } as any);
         } else {
           depositResult = writeDeposit({

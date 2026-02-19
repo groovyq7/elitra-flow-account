@@ -187,7 +187,7 @@ export function VaultBreakdownChart({
 
         <div className="mt-6 space-y-2">
           {breakdown.map((item, index) => {
-            const apiApy = (breakdownData?.[index] as any)?.apy as number | undefined;
+            const apiApy = breakdownData?.[index]?.apy;
             const displayApy = apiApy === 0 || apiApy == null ? apy : apiApy;
             return (
             <div
