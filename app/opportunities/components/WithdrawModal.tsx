@@ -68,7 +68,9 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     (vault) => vault.id === selectedToken.address
   );
   const decimals = selectedToken.decimals;
-  const parsedAmount = amount && !isNaN(Number(amount)) ? BigInt(Math.floor(Number(amount) * 10 ** 18)) : 0n;
+  // Use the token's actual decimals (not hardcoded 18) so vault share tokens
+  // with non-standard precision are handled correctly.
+  const parsedAmount = amount && !isNaN(Number(amount)) ? BigInt(Math.floor(Number(amount) * 10 ** decimals)) : 0n;
   const [isDisabled, setIsDisabled] = useState(false);
   const selectedVault = vaults.find((v) => v.id === selectedToken.address);
 
