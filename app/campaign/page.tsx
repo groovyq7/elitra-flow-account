@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,7 @@ export default function CampaignPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
+    <ErrorBoundary>
     <div className="pt-12">
       <div className="max-w-6xl mx-auto px-4">
         {/* Main Event Layout - Simplified */}
@@ -98,5 +100,6 @@ export default function CampaignPage() {
         </Card> */}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

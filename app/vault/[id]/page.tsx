@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useParams } from "next/navigation";
 import { useAccount, useConfig } from "wagmi";
 import { useVaultDetails } from "@/hooks/use-vault-data";
@@ -244,6 +245,7 @@ export default function VaultDetailsPage() {
   }
 
   return (
+    <ErrorBoundary>
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
@@ -595,6 +597,7 @@ export default function VaultDetailsPage() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
 

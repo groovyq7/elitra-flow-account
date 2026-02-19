@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Eye,
@@ -317,6 +318,7 @@ export default function OpportunitiesPage() {
   }, [chain, isModalOpen]);
 
   return (
+    <ErrorBoundary>
     <div className="lg:container w-full lg:mx-auto px-4 py-8 space-y-8 bg-transparent">
       {/* Portfolio Overview */}
       <div className="space-y-8">
@@ -749,5 +751,6 @@ export default function OpportunitiesPage() {
         }
       />
     </div>
+    </ErrorBoundary>
   );
 }
