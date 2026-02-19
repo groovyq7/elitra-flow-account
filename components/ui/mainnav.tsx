@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { WalletConnectButton } from "../wallet/wallet-connect-button";
+import { ChainStatus } from "../wallet/chain-status";
 import { Badge } from "./badge";
 import { formatTVL } from "@/lib/utils/format";
 import { useVaultList } from "@/hooks/use-vault-data";
@@ -182,6 +183,7 @@ export default function MainNav() {
 
             {isSpiceFlowReady && <PrivyNavItems />}
 
+            <ChainStatus />
             <WalletConnectButton />
           </div>
         </div>
