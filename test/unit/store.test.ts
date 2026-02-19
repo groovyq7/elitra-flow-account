@@ -271,3 +271,52 @@ describe("addWithdraw", () => {
     expect(useSpiceStore.getState().withdrawHistory).toHaveLength(100);
   });
 });
+
+// ---------------------------------------------------------------------------
+// resetStore
+// ---------------------------------------------------------------------------
+describe("resetStore", () => {
+  it("clears all history and resets balance to 0", () => {
+    // Seed some state
+    useSpiceStore.getState().addDeposit({
+      id: "d1", asset: "USDC", amount: "100", usdValue: "100",
+      sourceChain: "Sepolia", timestamp: Date.now(),
+    });
+    useSpiceStore.getState().addSupply({
+      id: "s1", assetAddress: "0xabc", assetSymbol: "WCBTC",
+      amount: "0.5", timestamp: Date.now(),
+    });
+    useSpiceStore.getState().addWithdraw({
+      id: "w1", amount: "10", destinationChain: "Sepolia",
+      destinationChainId: 11155111, timestamp: Date.now(),
+    });
+    useSpiceStore.getState().openDeposit();
+    useSpiceStore.getState().openWithdraw();
+    useSpiceStore.getState().toggleAccountPopup();
+
+    // Reset
+    useSpiceStore.getState().resetStore();
+
+    const state = useSpiceStore.getState();
+    expect(state.crossChainBalance).toBe(0);
+    expect(state.depositHistory).toHaveLength(0);
+    expect(state.supplyHistory).toHaveLength(0);
+    expect(state.withdrawHistory).toHaveLength(0);
+    expect(state.isDepositOpen).toBe(false);
+    expect(state.isWithdrawOpen).toBe(false);
+    expect(state.isSupplyOpen).toBe(false);
+    expect(state.supplyAsset).toBeNull();
+    expect(state.isAccountPopupOpen).toBe(false);
+  });
+
+  it("resetStore is idempotent — calling it twice leaves clean state", () => {
+    useSpiceStore.getState().addDeposit({
+      id: "d2", asset: "USDC", amount: "50", usdValue: "50",
+      sourceChain: "Sepolia", timestamp: Date.now(),
+    });
+    useSpiceStore.getState().resetStore();
+    useSpiceStore.getState().resetStore();
+    expect(useSpiceStore.getState().crossChainBalance).toBe(0);
+    expect(useSpiceStore.getState().depositHistory).toHaveLength(0);
+  });
+});
