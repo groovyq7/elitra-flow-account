@@ -3,7 +3,7 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { useSpiceStore } from "@/store/useSpiceStore";
-import { NATIVE_CHAIN_ID, WCBTC_ADDRESS } from "@/lib/spiceflowConfig";
+// spiceflowConfig constants used by other components
 
 // Auto-close delay after successful deposit so user sees the SDK success banner
 const AUTO_CLOSE_DELAY_MS = 3000;
@@ -289,10 +289,8 @@ export const DepositFlow: React.FC = () => {
         onClose={handleSdkClose}
         onDepositAmountChange={handleDepositAmountChange}
         allowedTokens={ALLOWED_DEPOSIT_TOKENS}
-        destinationChainId={NATIVE_CHAIN_ID}
-        destinationTokenAddress={WCBTC_ADDRESS}
         postDepositInstruction={handlePostDeposit}
-        postDepositInstructionLabel="Deposit to Elitra Account"
+        postDepositInstructionLabel="Deposit to Spicenet Account"
         externalWalletAddress={walletAddress}
       />
     );
