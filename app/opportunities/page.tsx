@@ -20,13 +20,12 @@ import { DepositModal } from "./components/DepositModal";
 import { TokenSelectorModal } from "./components/TokenSelectorModal";
 import { OpportunitiesList } from "./components/OpportunitiesList";
 import { Button } from "@/components/ui/button";
-import { TokenInfo, TokenType, Vault } from "@/lib/types";
-import { fetchTokenInfos, mergeTokenInfos } from "@/lib/fetchTokenInfos";
+import { TokenType, Vault } from "@/lib/types";
 import { useAccount, useConfig } from "wagmi";
 import { Badge } from "@/components/ui/badge";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import { LINKS, OFFICIAL_TOKENS, VAULT_TOKENS } from "@/lib/constants";
+import { LINKS } from "@/lib/constants";
 import { DepositedAssetsTable } from "./components/DepositedAssetsTable";
 import { ElitraAccountTab } from "./components/ElitraAccountTab";
 import { Tabs } from "@radix-ui/react-tabs";
@@ -37,15 +36,8 @@ import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 
 import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
-
-interface PortfolioData {
-  totalBalance: number;
-  eligibleToEarn: number;
-  estimatedRewards: number;
-  estimatedActiveRewards: number;
-  monthlyRewards: number;
-  depositedAmountUSD: number;
-}
+import { useOpportunitiesModals } from "@/hooks/useOpportunitiesModals";
+import { usePortfolioData } from "@/hooks/usePortfolioData";
 
 export default function OpportunitiesPage() {
   const { vaults } = useVaultData();
@@ -59,9 +51,6 @@ export default function OpportunitiesPage() {
   useEffect(() => { setHasMounted(true); }, []);
   const clientConnected = hasMounted && isConnected;
 
-  const [tokenInfos, setTokenInfos] = useState<TokenInfo[]>([]);
-  const [vaultTokenInfos, setVaultTokenInfos] = useState<TokenInfo[]>([]);
-  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [selectedTab, setSelectedTab] = useState<"available" | "deposited" | "account">(
     "available"
   );
@@ -72,39 +61,6 @@ export default function OpportunitiesPage() {
 
   const embeddedWalletAddress = useEmbeddedWalletAddress();
   const { openDeposit, openSupply, openWithdraw, crossChainBalance } = useSpiceStore();
-
-  // Calculate total APY from tokenInfos (weighted average)
-  const calculateTotalAPY = (tokenInfos: TokenInfo[]) => {
-    if (!tokenInfos || tokenInfos.length === 0) return 0;
-
-    const totalValue = tokenInfos.reduce(
-      (sum, token) => sum + token.availableUSD,
-      0
-    );
-    if (totalValue === 0) return 0;
-
-    return tokenInfos.reduce((sum, token) => {
-      const weight = token.availableUSD / totalValue;
-      return sum + token.apy * weight;
-    }, 0);
-  };
-
-  // Inside your component, add this memoized chart data:
-  const totalAPY = useMemo(() => calculateTotalAPY(tokenInfos), [tokenInfos]);
-  const initialBalance =
-    ((portfolioData?.depositedAmountUSD ?? 0) > 0
-      ? (portfolioData?.depositedAmountUSD ?? 0)
-      : (portfolioData?.totalBalance ?? 0)) || 1000;
-
-  const [showPortfolioOverview, setShowPortfolioOverview] = useState(true);
-  const [showGrowthChart, setShowGrowthChart] = useState(true);
-  const [portfolioCollapsed, setPortfolioCollapsed] = useState(true);
-
-  // Deposit/Withdraw modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"deposit">("deposit");
-  const [amount, setAmount] = useState("");
-  const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
 
   const citreaVaults = useMemo(() => getVaultsByChain(5115), []);
   const availableVaults =
@@ -139,170 +95,61 @@ export default function OpportunitiesPage() {
     [availableVaults]
   );
 
-  // Always use a valid token object as initial state
-  const defaultToken =
-    modalType === "deposit"
-      ? depositTokens[0] || {
-        symbol: "USDC",
-        address: "0xusdc",
-        decimals: 6,
-        name: "USD Coin",
-      }
-      : withdrawTokens[0] || {
-        symbol: "ElitraUSDC",
-        address: "0xusdc",
-        decimals: 6,
-        name: "Elitra USD Coin",
-      };
-  const [selectedToken, setSelectedToken] = useState<TokenType>(defaultToken);
+  // ── Modal state (via hook) ──────────────────────────────────────────────────
+  const {
+    isModalOpen,
+    setIsModalOpen,
+    modalType,
+    amount,
+    setAmount,
+    isTokenSelectorOpen,
+    setIsTokenSelectorOpen,
+    selectedToken,
+    setSelectedToken,
+  } = useOpportunitiesModals({ depositTokens, withdrawTokens });
+
+  // ── Portfolio data fetching (via hook) ─────────────────────────────────────
+  const { tokenInfos, vaultTokenInfos, portfolioData } = usePortfolioData({
+    depositTokens,
+    address,
+    embeddedWalletAddress,
+    chain,
+    citreaChain,
+    vaultsData,
+    isModalOpen,
+  });
+
+  // Calculate total APY from tokenInfos (weighted average)
+  const calculateTotalAPY = (infos: typeof tokenInfos) => {
+    if (!infos || infos.length === 0) return 0;
+
+    const totalValue = infos.reduce(
+      (sum, token) => sum + token.availableUSD,
+      0
+    );
+    if (totalValue === 0) return 0;
+
+    return infos.reduce((sum, token) => {
+      const weight = token.availableUSD / totalValue;
+      return sum + token.apy * weight;
+    }, 0);
+  };
+
+  const totalAPY = useMemo(() => calculateTotalAPY(tokenInfos), [tokenInfos]);
+  const initialBalance =
+    ((portfolioData?.depositedAmountUSD ?? 0) > 0
+      ? (portfolioData?.depositedAmountUSD ?? 0)
+      : (portfolioData?.totalBalance ?? 0)) || 1000;
+
+  const [showPortfolioOverview, setShowPortfolioOverview] = useState(true);
+  const [showGrowthChart, setShowGrowthChart] = useState(true);
+  const [portfolioCollapsed, setPortfolioCollapsed] = useState(true);
 
   useEffect(() => {
     if (embeddedWalletAddress) {
       sessionStorage.setItem('embeddedWalletAddress', embeddedWalletAddress);
     }
   }, [embeddedWalletAddress]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const getTokenInfos = async () => {
-      if (!depositTokens.length || !address || !chain) {
-        setTokenInfos([]);
-        setPortfolioData(null);
-        return;
-      }
-
-      const currentTokens = OFFICIAL_TOKENS[chain.id] || [];
-      const citreaTokens = OFFICIAL_TOKENS[5115] || [];
-      const tokensByChain = chain.id === 5115
-        ? [{ tokens: currentTokens, chain }]
-        : [
-          { tokens: currentTokens, chain },
-          ...(citreaChain ? [{ tokens: citreaTokens, chain: citreaChain }] : []),
-        ];
-
-      const [externalTokenInfos, embeddedTokenInfos] = await Promise.all([
-        Promise.all(
-          tokensByChain.map(({ tokens, chain: tokenChain }) =>
-            fetchTokenInfos(tokens, address, tokenChain, vaultsData)
-          )
-        ).then((results) => results.flat()),
-        embeddedWalletAddress
-          ? Promise.all(
-            tokensByChain.map(({ tokens, chain: tokenChain }) =>
-              fetchTokenInfos(tokens, embeddedWalletAddress as `0x${string}`, tokenChain, vaultsData)
-            )
-          ).then((results) => results.flat())
-          : Promise.resolve([]),
-      ]);
-
-      // Merge the token infos from both wallets
-      const combinedTokenInfoData = mergeTokenInfos(externalTokenInfos, embeddedTokenInfos);
-
-      // Fetch vault token infos for BOTH wallets (external + embedded)
-      const vaultTokens = VAULT_TOKENS[5115] || [];
-      const vaultChain = citreaChain || chain;
-      const [externalVaultData, embeddedVaultData] = await Promise.all([
-        fetchTokenInfos(vaultTokens, address, vaultChain, vaultsData),
-        embeddedWalletAddress
-          ? fetchTokenInfos(
-            vaultTokens,
-            embeddedWalletAddress as `0x${string}`,
-            vaultChain,
-            vaultsData
-          )
-          : Promise.resolve([]),
-      ]);
-
-      // Merge the vault token infos from both wallets
-      const combinedVaultTokenInfoData = mergeTokenInfos(
-        externalVaultData,
-        embeddedVaultData
-      );
-
-      if (!cancelled) {
-        setTokenInfos(combinedTokenInfoData);
-        setVaultTokenInfos(combinedVaultTokenInfoData);
-
-        const _portfolioData = {
-          totalBalance: combinedTokenInfoData.reduce(
-            (sum, token) => sum + token.availableUSD,
-            0
-          ),
-          eligibleToEarn: combinedTokenInfoData.reduce(
-            (sum, token) =>
-              depositTokens
-                .flatMap((t) => t?.address)
-                .includes(token.token.address)
-                ? sum + token.availableUSD
-                : sum,
-            0
-          ),
-          estimatedRewards: combinedTokenInfoData.reduce(
-            (sum, token) =>
-              depositTokens
-                .flatMap((t) => t?.address)
-                .includes(token.token.address)
-                ? sum + token.yearlyRewardUSD
-                : sum,
-            0
-          ),
-          estimatedActiveRewards: combinedVaultTokenInfoData.reduce(
-            (sum, token) => sum + token.yearlyRewardUSD,
-            0
-          ),
-          monthlyRewards: combinedTokenInfoData.reduce(
-            (sum, token) =>
-              depositTokens
-                .flatMap((t) => t?.address)
-                .includes(token.token.address)
-                ? sum + token.yearlyRewardUSD / 12
-                : sum,
-            0
-          ),
-          depositedAmountUSD: combinedVaultTokenInfoData.reduce(
-            (sum, token) => sum + token.availableUSD,
-            0
-          ),
-        };
-
-        setPortfolioData(_portfolioData);
-      }
-    };
-
-    // Run once on mount
-    getTokenInfos();
-
-    // Run when user comes back to the tab
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        getTokenInfos();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      cancelled = true;
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [
-    depositTokens,
-    address,
-    embeddedWalletAddress,
-    chain,
-    isModalOpen,
-    vaultsData,
-  ]);
-
-  useEffect(() => {
-    if (depositTokens.length > 0 && selectedToken.address === "0xusdc") {
-      const token = modalType === "deposit" ? depositTokens[0] : withdrawTokens[0];
-      if (token) setSelectedToken(token);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [depositTokens, withdrawTokens]);
-  // Note: selectedToken and modalType are intentionally omitted — this effect should
-  // only run when token lists change (to pick a default), not on every modalType change.
 
   useEffect(() => {
     let cancelled = false;
