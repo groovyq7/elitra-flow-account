@@ -90,10 +90,12 @@ export function RegistrationForm() {
           walletAddress: "",
         });
       } else {
-        throw new Error("Registration failed");
+        // Surface the API error message (e.g. "Already registered") if available
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || data.error || "Registration failed");
       }
     } catch (error) {
-      toast.error("Registration Failed");
+      toast.error(error instanceof Error ? error.message : "Registration Failed");
     } finally {
       setIsSubmitting(false);
     }
