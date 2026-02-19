@@ -1,6 +1,7 @@
 import { WithdrawWidgetModal, useAssetInput } from "@spicenet-io/spiceflow-ui";
 import { SelectChainModal } from "@/components/cross-chain-deposit/SelectChainModal";
 import { getChainConfig } from "@/lib/utils/chains";
+import { getVaultRate } from "@/lib/utils/get-token-balance";
 import { useEffect, useState, useMemo } from "react";
 import React from "react";
 import { encodeFunctionData, parseUnits } from "viem";
@@ -54,6 +55,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
   const [step, setStep] = useState<Step>(destination === "external" ? "chain-select" : "withdraw");
   const [selectedChainId, setSelectedChainId] = useState<number | null>(null);
   const [tokenAddress, setTokenAddress] = useState<`0x${string}`>();
+  const [vaultRate, setVaultRate] = useState<bigint | null>(null); // assets per 1 share, scaled 1e18
   const withdrawInput = useAssetInput();
 
   // Reset state when modal opens to ensure clean state on every open.
@@ -62,6 +64,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     if (open) {
       setStep(destination === "external" ? "chain-select" : "withdraw");
       setSelectedChainId(null);
+      setVaultRate(null); // Reset rate; fresh fetch will run via separate effect
     }
   }, [open, destination]);
 
@@ -72,6 +75,28 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     } else if (tokenSymbol === "eNUSD") {
       setTokenAddress("0x9B28B690550522608890C3C7e63c0b4A7eBab9AA");
     }
+  }, [open, tokenSymbol]);
+
+  // Fetch current vault rate (assets per 1 share, scaled by 1e18) so we can
+  // compute a proper minimumAssets with 0.5% slippage tolerance.
+  // Runs once when the modal opens; stale-on-unmount safe via cancelled flag.
+  useEffect(() => {
+    if (!open || !tokenSymbol) return;
+    let cancelled = false;
+    const fetchRate = async () => {
+      const chainConfig = getChainConfig(5115);
+      if (!chainConfig?.viemChain) return;
+      try {
+        const result = await getVaultRate(tokenSymbol, chainConfig.viemChain);
+        if (!cancelled && result.rateRaw > 0n) {
+          setVaultRate(result.rateRaw);
+        }
+      } catch {
+        // Leave vaultRate null; withdrawBatches will use 1n fallback
+      }
+    };
+    fetchRate();
+    return () => { cancelled = true; };
   }, [open, tokenSymbol]);
 
   const isCrossChainExternal =
@@ -89,9 +114,18 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
         ? embeddedWalletAddress
         : externalWalletAddress;
 
-    // minimumAssets = 1n: require at least 1 raw unit returned to prevent
-    // silent zero-asset withdrawals. Proper slippage protection would compute
-    // a percentage of expected assets, but that requires the current vault rate.
+    // minimumAssets: apply 0.5% slippage tolerance when the vault rate is
+    // available. Formula: floor(shares × rateRaw / 1e18 × 0.995).
+    // vaultRate is the rate from the Accountant contract: assets per 1 share
+    // scaled by 1e18 (e.g. 1.05e18 means each share redeems to 1.05 underlying).
+    // Fallback to 1n (accept anything > 0) when the rate fetch is still in
+    // flight or failed — prevents blocking the UI for a missing rate.
+    const RATE_SCALE = 1_000_000_000_000_000_000n; // 1e18
+    const minimumAssets =
+      vaultRate && vaultRate > 0n
+        ? (tokenAmount * vaultRate / RATE_SCALE) * 995n / 1000n
+        : 1n;
+
     return [
       {
         chainId: 5115,
@@ -102,7 +136,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
             data: encodeFunctionData({
               abi: TELLER_ABI,
               functionName: "bulkWithdrawNow",
-              args: [tokenAddress, tokenAmount, 1n, recipient],
+              args: [tokenAddress, tokenAmount, minimumAssets, recipient],
             }),
           },
         ],
@@ -117,6 +151,7 @@ export const SpiceWithdrawModal: React.FC<SpiceWithdrawModalProps> = ({
     embeddedWalletAddress,
     externalWalletAddress,
     isCrossChainExternal,
+    vaultRate,
   ]);
 
   const externalWithdrawBatches = useMemo((): ChainBatch[] => {
