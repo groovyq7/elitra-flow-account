@@ -1,21 +1,26 @@
 // lib/mongodb.ts
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI!
+const uri = process.env.MONGODB_URI
 const options = {}
 
 let client: MongoClient
-let mongoClientPromise: Promise<MongoClient>
+let mongoClientPromise: Promise<MongoClient> | null = null
 
-if (!global._mongoClientPromise) {
-  client = new MongoClient(uri, options)
-  global._mongoClientPromise = client.connect()
+if (uri) {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options)
+    global._mongoClientPromise = client.connect()
+  }
+  mongoClientPromise = global._mongoClientPromise
 }
-mongoClientPromise = global._mongoClientPromise
 
 export default mongoClientPromise
 
 export async function getMongoConnectionInstance() {
+  if (!mongoClientPromise) {
+    throw new Error('MONGODB_URI is not configured')
+  }
   return (await mongoClientPromise).db()
 }
 
