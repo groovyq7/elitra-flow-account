@@ -22,6 +22,7 @@ import {
   type GaslessStep,
 } from "@/hooks/useGaslessTransaction";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 import { getAddresses } from "@/lib/constants";
 import { NATIVE_CHAIN_ID } from "@/lib/spiceflowConfig";
 import { ERC20_ABI } from "@/lib/contracts/vault-abi";
@@ -60,7 +61,16 @@ const STEP_LABELS: Record<GaslessStep, string> = {
   error: "Transaction failed",
 };
 
+// Shell component — guards against calling Privy hooks before the provider is ready
 export const SupplyViaSpiceFlow: React.FC = () => {
+  const { isSupplyOpen, supplyAsset } = useSpiceStore();
+  const spiceFlowReady = useSpiceFlowReady();
+  if (!isSupplyOpen || !supplyAsset || !spiceFlowReady) return null;
+  return <SupplyViaSpiceFlowInner />;
+};
+
+// Inner component — only mounts when PrivyProvider is available
+const SupplyViaSpiceFlowInner: React.FC = () => {
   const {
     isSupplyOpen,
     supplyAsset,
@@ -134,11 +144,14 @@ export const SupplyViaSpiceFlow: React.FC = () => {
     }
 
     const tellerAddress = addresses.tellerAddress as Address;
+    const vaultAddress = addresses.vaultAddress as Address;
     const assetAddress = supplyAsset.address as Address;
     const amountInWei = parseUnits(amount, supplyAsset.decimals);
 
     // Build the atomic call array:
-    // Call 1: ERC20.approve(tellerAddress, exact amount)
+    // Call 1: ERC20.approve(vaultAddress, exact amount)
+    //   The vault calls safeTransferFrom(user, vault, amount) inside vault.enter(),
+    //   so the vault address needs the allowance — NOT the teller.
     // Call 2: Teller.deposit(depositAsset, depositAmount, minimumMint=0)
     const calls: Call[] = [
       {
@@ -147,7 +160,7 @@ export const SupplyViaSpiceFlow: React.FC = () => {
         data: encodeFunctionData({
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [tellerAddress, amountInWei],
+          args: [vaultAddress, amountInWei],
         }),
       },
       {
