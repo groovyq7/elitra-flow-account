@@ -169,7 +169,7 @@ describe("trackWithdrawFailed", () => {
 
     const [event, props] = mockCapture.mock.calls[0];
     expect(event).toBe("withdraw_failed");
-    expect(props).toMatchObject({ reason: "reverted" });
+    expect(props).toMatchObject({ reason: "reverted", tokenSymbol: "eCBTC" });
   });
 });
 

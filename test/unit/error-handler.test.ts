@@ -130,6 +130,57 @@ describe("ErrorHandler.handleError", () => {
     expect(ErrorHandler.handleError(error)).toBe("custom revert reason");
   });
 
+  // ── Gas errors ──────────────────────────────────────────────────────────────
+
+  it("returns 'Not enough gas' for error message containing 'gas'", () => {
+    const error = { message: "insufficient gas for transaction" };
+    expect(ErrorHandler.handleError(error)).toBe(
+      "Not enough gas, increase gas limit"
+    );
+  });
+
+  // ── STF (SafeTransferFrom shorthand) ────────────────────────────────────────
+
+  it("returns 'Token transfer failed' for 'STF' in message (Solidity shorthand)", () => {
+    const error = { message: "execution reverted: STF" };
+    expect(ErrorHandler.handleError(error)).toBe("Token transfer failed");
+  });
+
+  // ── Server error ─────────────────────────────────────────────────────────────
+
+  it("returns 'Server error' for SERVER_ERROR code", () => {
+    const error = { code: "SERVER_ERROR", message: "internal server error" };
+    expect(ErrorHandler.handleError(error)).toBe(
+      "Server error - please try again later"
+    );
+  });
+
+  // ── data.message priority ────────────────────────────────────────────────────
+
+  it("prefers error.data.message over error.message for pattern matching", () => {
+    const error = {
+      message: "some generic message",
+      data: { message: "ERC20: insufficient allowance" },
+    };
+    expect(ErrorHandler.handleError(error)).toBe(
+      "Token approval required — please approve first"
+    );
+  });
+
+  // ── cause.shortMessage for viem errors ───────────────────────────────────────
+
+  it("uses cause.shortMessage for pattern matching (viem nested errors)", () => {
+    const error = {
+      cause: {
+        code: 0,
+        details: "",
+        shortMessage: "minimumMint not satisfied",
+        name: "ContractFunctionRevertedError",
+      },
+    };
+    expect(ErrorHandler.handleError(error)).toBe("Price moved — try again");
+  });
+
   // ── getReadableErrorMessage ─────────────────────────────────────────────────
 
   it("capitalises the first letter of a message", () => {
