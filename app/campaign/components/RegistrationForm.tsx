@@ -176,7 +176,7 @@ export function RegistrationForm() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mt-0.5">
-                1
+                3
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-muted-foreground">

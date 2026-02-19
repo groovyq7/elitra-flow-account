@@ -121,7 +121,7 @@ export function VaultBreakdownChart({
         <div className="flex items-center justify-center">
           {
             // copy vault address
-            vault && (
+            vault && chain.blockExplorers?.default?.url && (
               <Link
                 href={`${chain.blockExplorers.default.url}/address/${vault.id}`}
                 target="_blank"
