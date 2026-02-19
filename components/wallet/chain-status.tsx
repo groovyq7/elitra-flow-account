@@ -1,8 +1,9 @@
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
 
 import { useState, useEffect } from "react"
 import { useChainId, useSwitchChain } from "wagmi"
-import { useSpiceStore } from "@/store/useSpiceStore"
+
 import { supportedChains } from "@/lib/wagmi"
 import { getChainMetadata } from "@/lib/contracts/vault-registry"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +13,7 @@ import { toast } from "@/hooks/use-toast"
 
 export function ChainStatus() {
   const chainId = useChainId()
-  const connectedAddress = useSpiceStore((s) => s.connectedAddress)
+  const connectedAddress = useWalletAddress()
   const isConnected = connectedAddress !== undefined
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain()
 

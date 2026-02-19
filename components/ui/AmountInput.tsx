@@ -1,3 +1,4 @@
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Wallet, ChevronDown } from "lucide-react";
@@ -9,7 +10,7 @@ import {
 } from "@/lib/utils/get-token-balance";
 import { formatPrice, formatTokenAmount } from "@/lib/utils/format";
 import { useChains, useChainId } from "wagmi";
-import { useSpiceStore } from "@/store/useSpiceStore";
+
 import { TokenType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { zeroAddress, parseUnits, formatUnits } from "viem";
@@ -36,7 +37,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
   className = "",
   reload = false,
 }) => {
-  const address = useSpiceStore((s) => s.connectedAddress);
+  const address = useWalletAddress();
   const chains = useChains();
   const chainId = useChainId();
   const chain = chains.find((c) => c.id === chainId)!;

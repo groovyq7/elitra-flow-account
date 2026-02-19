@@ -1,3 +1,4 @@
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -30,7 +31,7 @@ export function useVaultDetails(vaultId: string) {
 }
 
 export function useUserPositions() {
-  const address = useSpiceStore((s) => s.connectedAddress)
+  const address = useWalletAddress()
   const chainId = useChainId()
 
   return useQuery({
@@ -49,7 +50,7 @@ export function useUserPositions() {
 }
 
 export function useUserRewards(vaultId?: string) {
-  const address = useSpiceStore((s) => s.connectedAddress)
+  const address = useWalletAddress()
   const chainId = useChainId()
 
   return useQuery({

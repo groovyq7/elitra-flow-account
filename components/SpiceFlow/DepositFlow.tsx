@@ -1,7 +1,8 @@
+import { useSpiceStore } from "@/store/useSpiceStore";
 "use client";
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
-import { useSpiceStore } from "@/store/useSpiceStore";
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 import { trackDepositSuccess, trackDepositFailed, trackModalOpen } from "@/lib/analytics";
 // spiceflowConfig constants used by other components
 
@@ -25,7 +26,7 @@ interface SdkDepositProps {
 
 export const DepositFlow: React.FC = () => {
   const { isDepositOpen, closeDeposit, addDeposit } = useSpiceStore();
-  const walletAddress = useSpiceStore((s) => s.connectedAddress);
+  const walletAddress = useWalletAddress();
 
   const [SdkDeposit, setSdkDeposit] = useState<React.ComponentType<SdkDepositProps> | null>(
     null

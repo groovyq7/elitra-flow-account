@@ -1,3 +1,4 @@
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
 
 import { useReadContract } from "wagmi"
@@ -6,7 +7,7 @@ import { formatUnits, erc20Abi } from "viem"
 import { VAULT_ABI, ERC20_ABI } from "@/lib/contracts/vault-abi"
 
 export function useBalance(tokenAddress: string) {
-  const address = useSpiceStore((s) => s.connectedAddress)
+  const address = useWalletAddress()
 
   // Read share token decimals assuming the vault share token conforms to ERC20 (common for ERC4626)
   const { data: decimals } = useReadContract({
