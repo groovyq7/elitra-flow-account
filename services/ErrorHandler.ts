@@ -1,8 +1,3 @@
-
-export class NoTradeFoundError extends Error {
-  public name = 'NoTradeFoundError';
-}
-
 interface EthereumError {
   cause?: {
     code: number | string | null
@@ -18,7 +13,6 @@ interface EthereumError {
   data?: { message?: string }
 }
 
-
 export class ErrorHandler {
   private static ETHEREUM_RPC_ERRORS: { [key: number]: string } = {
     4001: "Transaction rejected by user",
@@ -29,14 +23,9 @@ export class ErrorHandler {
   }
 
   private static CONTRACT_ERRORS: { [key: string]: string } = {
-    INSUFFICIENT_OUTPUT_AMOUNT: "Insufficient output amount",
-    INSUFFICIENT_LIQUIDITY: "Insufficient liquidity",
-    INSUFFICIENT_INPUT_AMOUNT: "Insufficient input amount",
-    EXPIRED: "Transaction expired",
-    EXCESSIVE_INPUT_AMOUNT: "Excessive input amount",
     TRANSFER_FAILED: "Token transfer failed",
+    EXPIRED: "Transaction expired",
     "SAFEMATH: SUBTRACTION UNDERFLOW": "Calculation error: Amount too low",
-    "StoryHuntV3Router: INVALID_PATH": "Invalid token swap path",
   }
 
   private static NETWORK_ERRORS: { [key: string]: string } = {
@@ -44,15 +33,35 @@ export class ErrorHandler {
     SERVER_ERROR: "Server error - please try again later",
   }
 
-  // Add a new block for quotation errors:
-  private static QUOTATION_ERRORS = {
-    ProviderGasError: "Gas provider error - please try again later",
-    ProviderTimeoutError: "Provider timeout - please try again later",
-    ProviderBlockHeaderError: "Provider block header error - please try again later",
-    BlockConflictError: "Block conflict error - please check the network",
-    SuccessRateError: "Success rate error - please try again later",
-    NoTradeFoundError: "No trade found - please try again later",
-  }
+  /**
+   * Elitra/vault-specific error patterns checked before generic contract errors.
+   * Each entry maps a set of substrings to a user-friendly message.
+   */
+  private static VAULT_ERROR_PATTERNS: Array<{
+    patterns: string[]
+    message: string
+  }> = [
+    {
+      patterns: ["insufficient balance", "transfer amount exceeds balance"],
+      message: "Insufficient token balance",
+    },
+    {
+      patterns: ["allowance", "ERC20: insufficient allowance"],
+      message: "Token approval required — please approve first",
+    },
+    {
+      patterns: ["SafeTransferFrom", "safeTransferFrom"],
+      message: "Token transfer failed — check your balance and approval",
+    },
+    {
+      patterns: ["minimumMint", "minimum shares"],
+      message: "Price moved — try again",
+    },
+    {
+      patterns: ["minimumAssets"],
+      message: "Slippage too high — try again",
+    },
+  ]
 
   /**
    * Main error handler that checks for various error types.
@@ -60,9 +69,11 @@ export class ErrorHandler {
   static handleError(error: unknown): string {
     const err = error as EthereumError
 
-    // Explicit check for user rejection.
+    // Check for viem ACTION_REJECTED code (user rejected in wallet).
     const code = err?.cause?.code || err?.code
-    if (code === 4001) return "Transaction rejected by user"
+    if (code === "ACTION_REJECTED" || code === 4001) {
+      return "Transaction rejected by user"
+    }
 
     // Attempt to extract a contract-related error.
     const contractError = this.parseContractError(err)
@@ -80,7 +91,6 @@ export class ErrorHandler {
     return this.parseGenericError(err)
   }
 
-
   private static parseRpcError(error: EthereumError): string | null {
     const code = error?.cause?.code || error?.code
     if (code && typeof code === "number") {
@@ -96,11 +106,18 @@ export class ErrorHandler {
       error?.cause?.shortMessage ||
       error?.details ||
       error?.cause?.details ||
-      error?.message;
+      error?.message
 
     if (!errorMessage) return null
 
-    // Check through defined contract errors.
+    // Check Elitra/vault-specific patterns first (most relevant).
+    for (const { patterns, message } of this.VAULT_ERROR_PATTERNS) {
+      if (patterns.some((pattern) => errorMessage.includes(pattern))) {
+        return message
+      }
+    }
+
+    // Check through generic contract errors.
     for (const [key, value] of Object.entries(this.CONTRACT_ERRORS)) {
       if (errorMessage.includes(key)) return value
     }
@@ -109,19 +126,12 @@ export class ErrorHandler {
     const revertReason = this.parseRevertReason(errorMessage)
     if (revertReason) return revertReason
 
-    // Specific case for gas estimation issues.
+    // Gas estimation issues.
     if (errorMessage.includes("gas")) {
       return "Not enough gas, increase gas limit"
     }
 
-    if (errorMessage.includes("slippage") || errorMessage.toLowerCase().includes("too little received")) {
-      return "Price movement too high, increase slippage tolerance"
-    }
-
-    if (errorMessage.includes("approve")) {
-      return "Token approval failed"
-    }
-
+    // STF is Solidity shorthand for SafeTransferFrom failure.
     if (errorMessage.includes("STF")) {
       return "Token transfer failed"
     }
@@ -166,67 +176,8 @@ export class ErrorHandler {
     return errorMessage || "Please try again later"
   }
 
-  // Specific error handlers for DEX operations.
-  static handleSwapError(error: unknown): string {
-    const handled = this.handleError(error)
-    if (handled !== "An unexpected error occurred - please try again")
-      return handled
-    const err = error as EthereumError
-    const errorMessage =
-      err?.data?.message ||
-      err?.shortMessage ||
-      err?.cause?.shortMessage ||
-      err?.details ||
-      err?.cause?.details ||
-      err?.message
-    if (errorMessage?.includes("slippage") || errorMessage?.toLowerCase().includes("too little received")) {
-      return "Price movement too high, increase slippage tolerance"
-    }
-
-    return handled
-  }
-
-  static handleApprovalError(error: unknown): string {
-    const handled = this.handleError(error)
-    if (handled !== "An unexpected error occurred - please try again")
-      return handled
-    const err = error as EthereumError
-    const errorMessage =
-      err?.data?.message ||
-      err?.shortMessage ||
-      err?.cause?.shortMessage ||
-      err?.details ||
-      err?.cause?.details ||
-      err?.message
-    if (errorMessage?.includes("approve")) {
-      return "Token approval failed - check token permissions"
-    }
-
-    return handled
-  }
-
-  static handleBalanceError(error: unknown): string {
-    const handled = this.handleError(error)
-    if (handled !== "An unexpected error occurred - please try again")
-      return handled
-    const err = error as EthereumError
-    const errorMessage =
-      err?.data?.message ||
-      err?.shortMessage ||
-      err?.cause?.shortMessage ||
-      err?.details ||
-      err?.cause?.details ||
-      err?.message
-    if (errorMessage?.includes("balance")) {
-      return "Insufficient balance for transaction"
-    }
-
-    return handled
-  }
-
   /**
    * Utility function to format a message for user display.
-   * You might want to adjust the logic to better handle acronyms.
    */
   static getReadableErrorMessage(message: string): string {
     if (!message) return ""
