@@ -14,7 +14,7 @@ import { useAllowance } from "@/hooks/useAllowance";
 import { config } from "@/lib/wagmi";
 import toast from "react-hot-toast";
 import { ErrorHandler } from "@/services/ErrorHandler";
-import { zeroAddress } from "viem";
+import { zeroAddress, parseUnits } from "viem";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { abbreviateNumber, formatAPY, formatPrice } from "@/lib/utils/format";
 import { getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
@@ -69,7 +69,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     };
   const depositTokenAddress = selectedToken.address;
   const decimals = selectedToken.decimals;
-  const parsedAmount = amount && !isNaN(Number(amount)) ? BigInt(Math.floor(Number(amount) * 10 ** decimals)) : 0n;
+  // parseUnits handles precision correctly via BigInt arithmetic (avoids Number float loss)
+  const parsedAmount = amount && !isNaN(Number(amount)) && Number(amount) > 0
+    ? parseUnits(amount, decimals)
+    : 0n;
   const selectedVault = vaults.find(
     (v) => v.token0.address === selectedToken.address
   );
@@ -140,7 +143,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     const estimatedShares = (amountInWei * RATE_SCALE) / vaultRate.raw;
 
     // Minimum shares with 0.5% slippage protection
-    const minAmount = estimatedShares; //- (estimatedShares * BigInt(5)) / BigInt(1000);
+    const minAmount = estimatedShares - (estimatedShares * BigInt(5)) / BigInt(1000);
     const usdAmount = tokenPrice
       ? (Number(tokenPrice) * Number(amount)).toFixed(2)
       : "0.00";
@@ -149,7 +152,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     const formatShares = (shares: bigint) => {
       if (shares === BigInt(0)) return "0";
 
-      // Convert to number with proper decimals
+      // Convert to number with proper decimals.
+      // Vault share tokens are assumed to have 18 decimals (ERC4626 standard).
+      // If a vault uses non-18 decimals, this display value would be incorrect,
+      // but precision loss here is acceptable since this is display-only (not on-chain).
       const sharesNumber = Number(shares) / 10 ** 18;
       return sharesNumber.toFixed(8); // Show up to 18 decimal places
     };
@@ -241,7 +247,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
-            args: [NATIVE_TOKEN_ADDRESS[chainId], parsedAmount, 1n],
+            args: [NATIVE_TOKEN_ADDRESS[chainId], parsedAmount, minAmount],
             value: parsedAmount,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi type doesn't infer `value` from JSON ABI payable mutability
           } as any);
@@ -250,7 +256,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
-            args: [depositTokenAddress, parsedAmount, 1n],
+            args: [depositTokenAddress, parsedAmount, minAmount],
           });
         }
         setTxStatus("loading");
