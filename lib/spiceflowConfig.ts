@@ -21,13 +21,8 @@ export const DELEGATE_CONTRACTS: Record<number, `0x${string}`> = {
 export const WCBTC_ADDRESS =
   "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93" as `0x${string}`;
 
-if (
-  typeof window !== 'undefined' &&
-  process.env.NODE_ENV === 'production' &&
-  !process.env.NEXT_PUBLIC_RELAYER_API_URL
-) {
-  console.warn(
-    '[SpiceFlowConfig] NEXT_PUBLIC_RELAYER_API_URL is not set in production. ' +
-    'Set it to the absolute TX Submission API URL in your deployment env.'
-  );
-}
+// Note: NEXT_PUBLIC_RELAYER_API_URL is optional.
+// When unset (the default), SPICENET_API_URL defaults to '/api/relayer' which proxies
+// requests through next.config.mjs rewrites to SPICENET_RELAYER_DESTINATION.
+// Only set NEXT_PUBLIC_RELAYER_API_URL if you want to bypass the proxy and call
+// the relayer URL directly from the browser (not recommended in production).
