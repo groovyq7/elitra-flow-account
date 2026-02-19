@@ -157,6 +157,8 @@ function Foo({ bar: _bar, baz }: Props) { /* uses baz, not bar */ }
 Run `npm install` after pulling if `package.json` changed (lockfile may need sync after dependency changes).
 Removed unused dependencies in Feb 2026 deep review: `@dynamic-labs/ethereum`, `@dynamic-labs/sdk-react-core`, `jotai`.
 
+**Coverage:** `@vitest/coverage-v8` was added as a devDependency (Feb 2026). Run `npm install` once to install it. After that, `npm run test:coverage` produces a text + json-summary coverage report with 30% line / 25% function thresholds.
+
 ---
 
 ## SDK Patch: @spicenet-io/spiceflow-ui
