@@ -7,6 +7,7 @@ import {
   citreaTestnet,
   baseSepolia,
 } from "viem/chains";
+import { CBTC_LOGO_URI } from "@/lib/constants";
 
 export interface Chain {
   id: number;
@@ -206,7 +207,7 @@ export const CHAIN_CONFIGS: { [chainId: number]: ChainConfig } = {
         name: "Wrapped Citrea BTC",
         symbol: "WCBTC",
         decimals: 18,
-        logoURI: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
+        logoURI: CBTC_LOGO_URI,
       },
     ],
   },

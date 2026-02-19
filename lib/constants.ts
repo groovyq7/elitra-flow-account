@@ -299,3 +299,23 @@ export const NATIVE_TOKEN_ADDRESS: Record<number, string> = {
   1329: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
   1: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
 };
+
+// ── Token logo URIs ────────────────────────────────────────────────────────────
+
+/** CBTC / WCBTC / ECBTC token logo on Citrea */
+export const CBTC_LOGO_URI = "https://citrea.elitra.xyz/images/tokens/cbtc.jpg";
+
+/** SEI / WSEI / ESEI token logo (hosted on yei.finance CDN) */
+export const SEI_LOGO_URI = "https://app.yei.finance/icons/tokens/sei.svg";
+
+/** ETH / WETH token logo (hosted on yei.finance CDN) */
+export const WETH_LOGO_URI = "https://app.yei.finance/icons/tokens/weth.svg";
+
+/** USDC / eUSDC token logo (hosted on yei.finance CDN) */
+export const USDC_LOGO_URI = "https://app.yei.finance/icons/tokens/usdc.svg";
+
+/** USDT / eUSDT token logo (hosted on yei.finance CDN) */
+export const USDT_LOGO_URI = "https://app.yei.finance/icons/tokens/usdt.svg";
+
+/** NUSD / eNUSD token logo (hosted on satsuma.exchange) */
+export const NUSD_LOGO_URI = "https://www.satsuma.exchange/nusd-icon.svg";

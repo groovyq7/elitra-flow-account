@@ -8,7 +8,7 @@ import { SelectChainModal } from "@/components/cross-chain-deposit/SelectChainMo
 import { WithdrawWidgetModal, useAssetInput } from "@spicenet-io/spiceflow-ui";
 import { encodeFunctionData, parseUnits } from "viem";
 import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
-import { getAddresses } from "@/lib/constants";
+import { getAddresses, CBTC_LOGO_URI } from "@/lib/constants";
 import { getChainConfig } from "@/lib/utils/chains";
 import {
   SUPPORTED_CHAIN_IDS,
@@ -25,7 +25,7 @@ const CITREA_VAULT_TOKENS = [
     name: "Citrea BTC Vault",
     decimals: 18,
     chainId: NATIVE_CHAIN_ID,
-    logoURI: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
+    logoURI: CBTC_LOGO_URI,
   },
 ];
 

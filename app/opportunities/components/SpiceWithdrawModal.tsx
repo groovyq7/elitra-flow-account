@@ -6,7 +6,7 @@ import { useEffect, useState, useMemo } from "react";
 import React from "react";
 import { encodeFunctionData, parseUnits } from "viem";
 import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
-import { getAddresses } from "@/lib/constants";
+import { getAddresses, CBTC_LOGO_URI } from "@/lib/constants";
 import { ChainBatch } from "@/lib/types";
 import { trackWithdrawSuccess } from "@/lib/analytics";
 
@@ -19,7 +19,7 @@ const CITREA_TOKENS_CONFIG = [
     name: "Citrea BTC",
     decimals: 18,
     chainId: 5115,
-    logoURI: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
+    logoURI: CBTC_LOGO_URI,
   },
 ];
 

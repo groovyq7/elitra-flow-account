@@ -1,5 +1,13 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import {
+  CBTC_LOGO_URI,
+  SEI_LOGO_URI,
+  WETH_LOGO_URI,
+  USDC_LOGO_URI,
+  USDT_LOGO_URI,
+  NUSD_LOGO_URI,
+} from "@/lib/constants"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -9,26 +17,26 @@ export function cn(...inputs: ClassValue[]) {
 export const getTokenImage = (symbol: string | undefined) => {
   if (symbol == null || typeof symbol !== "string") return null;
   const tokenImages: { [key: string]: string } = {
-    SEI: "https://app.yei.finance/icons/tokens/sei.svg",
-    ETH: "https://app.yei.finance/icons/tokens/weth.svg",
-    WETH: "https://app.yei.finance/icons/tokens/weth.svg",
-    BTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
-    WBTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
+    SEI: SEI_LOGO_URI,
+    ETH: WETH_LOGO_URI,
+    WETH: WETH_LOGO_URI,
+    BTC: CBTC_LOGO_URI,
+    WBTC: CBTC_LOGO_URI,
     SUMA: "https://www.satsuma.exchange/satsuma-logo.svg",
     VESUMA: "https://www.satsuma.exchange/(x)satsuma-logo.png",
-    NUSD: "https://www.satsuma.exchange/nusd-icon.svg",
-    ENUSD: "https://www.satsuma.exchange/nusd-icon.svg",
-    WSEI: "https://app.yei.finance/icons/tokens/sei.svg",
-    USDC: "https://app.yei.finance/icons/tokens/usdc.svg",
-    USDT: "https://app.yei.finance/icons/tokens/usdt.svg",
-    ESEI: "https://app.yei.finance/icons/tokens/sei.svg",
-    EWSEI: "https://app.yei.finance/icons/tokens/sei.svg",
-    EUSDC: "https://app.yei.finance/icons/tokens/usdc.svg",
-    EUSDT: "https://app.yei.finance/icons/tokens/usdt.svg",
-    EWCBTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
-    ECBTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
-    CBTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
-    WCBTC: "https://citrea.elitra.xyz/images/tokens/cbtc.jpg",
+    NUSD: NUSD_LOGO_URI,
+    ENUSD: NUSD_LOGO_URI,
+    WSEI: SEI_LOGO_URI,
+    USDC: USDC_LOGO_URI,
+    USDT: USDT_LOGO_URI,
+    ESEI: SEI_LOGO_URI,
+    EWSEI: SEI_LOGO_URI,
+    EUSDC: USDC_LOGO_URI,
+    EUSDT: USDT_LOGO_URI,
+    EWCBTC: CBTC_LOGO_URI,
+    ECBTC: CBTC_LOGO_URI,
+    CBTC: CBTC_LOGO_URI,
+    WCBTC: CBTC_LOGO_URI,
   };
   return tokenImages[symbol.toUpperCase()] ?? null;
 };
