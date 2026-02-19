@@ -9,8 +9,7 @@ import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
 import { getAddresses, CBTC_LOGO_URI } from "@/lib/constants";
 import { ChainBatch } from "@/lib/types";
 import { trackWithdrawSuccess } from "@/lib/analytics";
-
-const SOLVER_ADDRESS = "0x111115763723B53395308eC4c9AB9d5FB0844cae" as `0x${string}`;
+import { SOLVER_ADDRESS } from "@/lib/spiceflowConfig";
 
 const CITREA_TOKENS_CONFIG = [
   {

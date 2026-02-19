@@ -11,6 +11,7 @@ import { ChainBatch } from "@/lib/types";
 import { DepositWidgetModal, useAssetInput } from "@spicenet-io/spiceflow-ui";
 import { ERC20_ABI } from "@/lib/contracts/vault-abi";
 import { getTokenPrice } from "@/lib/utils/get-token-balance";
+import { WCBTC_ADDRESS } from "@/lib/spiceflowConfig";
 
 // Dynamically import CrossChainDepositFlow to avoid SSR issues
 const CrossChainDepositFlow = dynamic(
@@ -29,8 +30,7 @@ interface SpiceDepositModalProps {
 // Balance is stored with SOURCE chain ID, so we need all chains here
 const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
-// WCBTC token address on Citrea (destination token for vault deposit)
-const WCBTC_ADDRESS = "0x8d0c9d1c17aE5e40ffF9bE350f57840E9E66Cd93" as `0x${string}`;
+// WCBTC_ADDRESS imported from lib/spiceflowConfig (single source of truth)
 
 type ModalStep = "chain-select" | "cross-chain-deposit" | "vault-deposit";
 
