@@ -117,7 +117,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     return num.toFixed(underlyingDecimals > 8 ? 8 : underlyingDecimals);
   };
 
-  const { estimatedAssets: _estimatedAssets, minAmount: _minAmount, formattedUSDAmount, formattedMinAmount } =
+  const { estimatedAssets: _estimatedAssets, minAmount: withdrawMinAmount, formattedUSDAmount, formattedMinAmount } =
     useMemo(() => {
       if (!amount || Number(amount) <= 0) {
         return {
@@ -141,7 +141,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       const sharesInWei = parsedAmount; // parsed with 18 decimals
       const SCALE = BigInt("1000000000000000000");
       const assetsInWei = (sharesInWei * vaultRate) / SCALE;
-      const minAmount = assetsInWei; // optionally subtract slippage buffer
+      // Apply 0.5% slippage tolerance: minimumAssets = assets × 99.5%
+      const minAmount = assetsInWei - (assetsInWei * 5n) / 1000n;
       const underlyingDecimals = withdrawToken?.token0.decimals || 18;
       const assetsNumber = Number(minAmount) / 10 ** underlyingDecimals;
       const usdAmount = assetsNumber * (tokenPrice ?? 0);
@@ -202,7 +203,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           args: [
             underlyingTokenAddress,
             parsedAmount,
-            0n,
+            withdrawMinAmount,
             address,
           ],
         });
