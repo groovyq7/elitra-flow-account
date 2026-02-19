@@ -95,6 +95,9 @@ export async function fetchYeiData(
 
       const utilizationRate = computeUtilizationRate(totalBorrowsRaw, totalSupplyRaw);
 
+      // Number(rayBigInt) / RAY: converting a ~1e25 BigInt to Number loses
+      // precision in lower digits, but the result (a 0–1 decimal) is accurate
+      // to >10 significant figures — well beyond what's needed for APY display.
       const supplyApy = (toNum(data.currentLiquidityRate) / RAY) * 100;
       const borrowApy = (toNum(data.currentVariableBorrowRate) / RAY) * 100;
 
