@@ -2,7 +2,6 @@
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useSpiceStore } from "@/store/useSpiceStore";
-import { useSpiceStore } from "@/store/useSpiceStore";
 import { trackDepositSuccess, trackDepositFailed, trackModalOpen } from "@/lib/analytics";
 // spiceflowConfig constants used by other components
 
