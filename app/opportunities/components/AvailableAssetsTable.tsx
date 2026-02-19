@@ -21,19 +21,33 @@ import {
 } from "@spicenet-io/spiceflow-ui";
 import { getTargetAddresses } from "@/lib/utils/chains";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 import { TokenInfo, Vault } from "@/lib/types";
 
 const SUPPORTED_CHAINS = [11155111, 84532, 421614, 5115];
 
-export function AvailableAssetsTable({
-  tokenInfos,
-  availableVaults,
-  fullWidth = false,
-}: {
+interface AvailableAssetsTableProps {
   tokenInfos: TokenInfo[];
   availableVaults: Vault[];
   fullWidth?: boolean;
-}) {
+}
+
+/**
+ * Shell — guards against calling SDK hooks (useSpiceAssets, useEmbeddedWalletAddress)
+ * before the SpiceFlowProvider has mounted.  Renders null until ready.
+ */
+export function AvailableAssetsTable(props: AvailableAssetsTableProps) {
+  const spiceFlowReady = useSpiceFlowReady();
+  if (!spiceFlowReady) return null;
+  return <AvailableAssetsTableInner {...props} />;
+}
+
+/** Inner component — safe to call SpiceFlow SDK hooks here. */
+function AvailableAssetsTableInner({
+  tokenInfos,
+  availableVaults,
+  fullWidth = false,
+}: AvailableAssetsTableProps) {
   const { isConnected } = useAccount();
   const { openDeposit, openSupply, crossChainBalance } = useSpiceStore();
 

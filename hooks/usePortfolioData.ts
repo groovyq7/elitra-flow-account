@@ -177,6 +177,10 @@ export function usePortfolioData({
 
           setPortfolioData(_portfolioData);
         }
+      } catch {
+        // Silently ignore fetch errors — portfolioData stays null until
+        // a successful fetch. This prevents unhandled promise rejections
+        // (e.g. network errors) from surfacing to the user.
       } finally {
         if (!cancelled) setIsLoading(false);
       }

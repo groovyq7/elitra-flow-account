@@ -257,7 +257,8 @@ export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
 
   // Step 3: Vault deposit via 7702 using DepositWidgetModal
   // This deposits from cross-chain balance into the Elitra vault
-  if (step === "vault-deposit" && open && tellerAddress) {
+  // Guard: require both tellerAddress and vaultAddress so depositBatches is never empty.
+  if (step === "vault-deposit" && open && tellerAddress && vaultAddress) {
     return (
       <DepositWidgetModalAny
         isOpen={open}

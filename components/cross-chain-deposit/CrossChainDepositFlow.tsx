@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { useAccount, useSwitchChain } from "wagmi";
+import { useSpiceFlowReady } from "@/hooks/usePrivySafe";
 import { SelectChainModal } from "./SelectChainModal";
 import { CrossChainDepositModal } from "./CrossChainDepositModal";
 import { AirdropModal } from "./Airdrop";
@@ -25,7 +26,20 @@ type FlowStep = "select-chain" | "provider-login" | "airdrop" | "deposit";
 // once the airdrop flow has been tested and confirmed to support that chain.
 type SupportedChainId = 11155111 | 84532 | 5115;
 
-export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
+/**
+ * Shell — guards against calling Privy hooks before the SpiceFlowProvider
+ * (and its internal PrivyProvider) has mounted.  Renders null until ready.
+ */
+export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = (
+  props
+) => {
+  const spiceFlowReady = useSpiceFlowReady();
+  if (!props.isOpen || !spiceFlowReady) return null;
+  return <CrossChainDepositFlowInner {...props} />;
+};
+
+/** Inner component — safe to call Privy hooks here. */
+const CrossChainDepositFlowInner: React.FC<CrossChainDepositFlowProps> = ({
   isOpen,
   onClose,
   onComplete,
