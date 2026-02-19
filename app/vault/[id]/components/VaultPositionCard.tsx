@@ -1,3 +1,24 @@
+/**
+ * VaultPositionCard — LEGACY COMPONENT (not currently rendered)
+ *
+ * This component implements the OLD deposit/withdraw pattern using an inline
+ * Dialog with manual approval flows. The vault page (`app/vault/[id]/page.tsx`)
+ * has since moved to the Spice modal pattern via `useSpiceStore`:
+ *   openDeposit() / openWithdraw() / openSupply()
+ *
+ * The page has an equivalent inline position card that uses these methods.
+ * Connecting VaultPositionCard would require re-wiring:
+ *   - depositAmount / setDepositAmount / handleDeposit / isApproving / isDepositing
+ *   - needsApproval (from useAllowance)
+ *   - withdrawAmount / setWithdrawAmount / handleWithdraw / isWithdrawing
+ *
+ * These were all part of the legacy direct-contract interaction approach and
+ * are no longer used. The Spice UI SDK handles this flow internally.
+ *
+ * If you need to revive this component, replace the Dialog contents with
+ * `openDeposit()` / `openWithdraw()` calls from useSpiceStore and strip the
+ * approval/amount props. See the current position card in page.tsx for reference.
+ */
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Zap, Info, ArrowDownToLine } from "lucide-react";

@@ -31,8 +31,14 @@ export function VaultStatsCards({ vault }: VaultStatsCardsProps) {
       </Card>
       <Card className="bg-card border-border p-4 hover:border-primary/20 transition-all duration-300 hover:shadow-md">
         <div className="text-center">
+          {/*
+            Deposit Cap: The Vault type does not currently include a `depositCap` field.
+            This data must come from the on-chain Teller contract (getTellerDepositCap or similar).
+            To populate this: read the cap via `readContract` on the Teller ABI and pass it as a
+            prop, or extend the Vault type with `depositCap?: bigint` populated during enrichment.
+          */}
           <div className="text-xl font-bold text-foreground mb-1">
-            $1M
+            –
           </div>
           <div className="text-xs text-muted-foreground uppercase tracking-wider">
             Deposit Cap
@@ -41,8 +47,15 @@ export function VaultStatsCards({ vault }: VaultStatsCardsProps) {
       </Card>
       <Card className="bg-card border-border p-4 hover:border-primary/20 transition-all duration-300 hover:shadow-md">
         <div className="text-center">
+          {/*
+            Yield Generated: Not directly available in the Vault type.
+            Could be approximated as: (totalAssetDepositedRaw - totalAssetWithdrawnRaw)
+            minus current TVL, but this requires subgraph data and accurate token pricing.
+            To populate this: compute from vault.totalAssetDepositedRaw,
+            vault.totalAssetWithdrawnRaw and the current TVL when subgraph data is available.
+          */}
           <div className="text-xl font-bold text-foreground mb-1">
-            $12,000
+            –
           </div>
           <div className="text-xs text-muted-foreground uppercase tracking-wider">
             Yield Generated

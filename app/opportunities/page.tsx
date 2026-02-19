@@ -153,10 +153,15 @@ export default function OpportunitiesPage() {
   useEffect(() => {
     let cancelled = false;
     const getVaultInfos = async () => {
-      const _vaults = await getVaultsByChainWithSubgraph(5115);
-
-      if (!cancelled) {
-        setVaultsData(_vaults);
+      try {
+        const _vaults = await getVaultsByChainWithSubgraph(5115);
+        if (!cancelled) {
+          setVaultsData(_vaults);
+        }
+      } catch {
+        // getVaultsByChainWithSubgraph already catches internally and returns base vaults.
+        // This outer catch is a safety net for unexpected errors — silently fall through
+        // so the UI shows the statically-registered vaults instead of crashing.
       }
     };
 

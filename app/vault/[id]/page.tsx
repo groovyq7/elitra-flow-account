@@ -11,11 +11,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VaultBreakdownChart } from "@/app/vault/[id]/components/vault-breakdown-chart";
+import { VaultStatsCards } from "@/app/vault/[id]/components/VaultStatsCards";
 import {
   formatAPY,
   formatPrice,
 } from "@/lib/utils/format";
-import { Coins, ArrowLeft } from "lucide-react";
+import { Coins, ArrowLeft, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import { getTokenImage } from "@/lib/utils";
 import { KeyMetricsCard } from "./components/KeyMetricsCard";
@@ -73,6 +74,7 @@ export default function VaultDetailsPage() {
     userBalance,
     userShareBalance,
     userPositionPnlInfo,
+    subgraphAvailable,
   } = useVaultPageData({
     vault,
     vaultChain,
@@ -165,6 +167,14 @@ export default function VaultDetailsPage() {
               </div>
             </div>
           </div>
+
+          {/* Subgraph unavailable notice — shown when the indexer endpoint is down */}
+          {subgraphAvailable === false && (
+            <div className="mt-4 flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-sm">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Historical data unavailable — showing cached vault data. Live APY and analytics may be delayed.</span>
+            </div>
+          )}
 
           <div className="space-y-8 mt-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -293,6 +303,11 @@ export default function VaultDetailsPage() {
                 protocols={vault?.breakdown || []}
               />
             </div>
+          </div>
+
+          {/* Vault stats: share price, vault address, deposit cap, yield generated */}
+          <div className="mt-8">
+            <VaultStatsCards vault={vault} />
           </div>
 
           <div className="space-y-8 mt-8">

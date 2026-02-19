@@ -42,6 +42,12 @@ export interface UseVaultPageDataResult {
   userShareBalance: { formatted: number } | undefined;
   /** Combined PnL information for the user's position. */
   userPositionPnlInfo: UserPnlInfo | undefined;
+  /**
+   * Whether the subgraph responded successfully.
+   * false = subgraph fetch failed; page should fall back to static vault data.
+   * undefined = fetch not yet attempted.
+   */
+  subgraphAvailable: boolean | undefined;
 }
 
 export function useVaultPageData({
@@ -54,6 +60,7 @@ export function useVaultPageData({
 }: UseVaultPageDataProps): UseVaultPageDataResult {
   // ─── Subgraph-enriched vault data (live APY) ────────────────────────────
   const [vaultData, setVaultData] = useState<Vault | undefined>();
+  const [subgraphAvailable, setSubgraphAvailable] = useState<boolean | undefined>(undefined);
 
   useEffect(() => {
     if (!vault) return;
@@ -65,10 +72,19 @@ export function useVaultPageData({
         const _vaultInfo = await getVaultByIdWithSubgraph(vault.id, vaultChain.id);
         // Only set vaultData if the result is a valid vault object.
         // null / undefined means the vault was not found in the subgraph.
-        if (!cancelled && _vaultInfo) setVaultData(_vaultInfo);
+        if (!cancelled) {
+          if (_vaultInfo) {
+            setVaultData(_vaultInfo);
+            setSubgraphAvailable(true);
+          } else {
+            // Vault not found in subgraph — still mark as available (no network error)
+            setSubgraphAvailable(true);
+          }
+        }
       } catch {
-        // Silently ignore subgraph errors — vaultData stays undefined until
-        // a successful fetch. The page falls back to the basic vault data.
+        // Subgraph is unreachable or returned an error.
+        // vaultData stays undefined; the page falls back to the static vault data.
+        if (!cancelled) setSubgraphAvailable(false);
       }
     }
     getVaultInfo();
@@ -270,5 +286,6 @@ export function useVaultPageData({
     userBalance,
     userShareBalance,
     userPositionPnlInfo,
+    subgraphAvailable,
   };
 }
