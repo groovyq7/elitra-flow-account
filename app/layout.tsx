@@ -14,6 +14,7 @@ import { CampaignRibbon } from "@/components/ui/campaign-ribbon";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { SpiceFlowProvider } from "@/components/providers/SpiceFlowProvider";
 import { GlobalModals } from "@/components/SpiceFlow/GlobalModals";
+import { TestWalletAutoConnect } from "@/components/providers/TestWalletProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -103,6 +104,7 @@ export default function RootLayout({
           <PostHogProvider>
             <WagmiProviderWrapper>
               <SpiceFlowProvider>
+                {process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true" && <TestWalletAutoConnect />}
                 {/* <CampaignRibbon /> */}
                 <MainNav />
                 {children}

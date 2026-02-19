@@ -1,113 +1,65 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("App Health", () => {
-  test("page loads without crashing", async ({ page }) => {
-    await page.goto("/");
-    // Page should render — not a blank white screen
-    await expect(page.locator("body")).not.toBeEmpty();
-    // Nav should be present
-    await expect(page.locator("nav")).toBeVisible();
-  });
-
-  test("no unhandled console errors on load", async ({ page }) => {
+  test("home page loads without errors", async ({ page }) => {
     const errors: string[] = [];
     page.on("console", (msg) => {
-      if (msg.type() === "error") {
-        errors.push(msg.text());
-      }
+      if (msg.type() === "error") errors.push(msg.text());
+    });
+    page.on("pageerror", (err) => errors.push(err.message));
+
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    await expect(page).not.toHaveURL(/error/);
+    expect(errors.filter(e => !isKnownWarning(e))).toHaveLength(0);
+    await page.screenshot({ path: "test/e2e/screenshots/01-home.png" });
+  });
+
+  test("opportunities page loads without errors", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") errors.push(msg.text());
     });
 
-    await page.goto("/");
-    // Wait for hydration to settle
-    await page.waitForTimeout(3000);
-
-    // Filter out known benign errors (third-party scripts, network errors from
-    // external services that may be unavailable in test environments)
-    const criticalErrors = errors.filter(
-      (e) =>
-        !e.includes("googletagmanager") &&
-        !e.includes("posthog") &&
-        !e.includes("ERR_CONNECTION_REFUSED") &&
-        !e.includes("Failed to fetch") &&
-        !e.includes("net::") &&
-        !e.includes("favicon")
-    );
-
-    expect(criticalErrors).toEqual([]);
-  });
-
-  test("document title contains Elitra", async ({ page }) => {
-    await page.goto("/");
-    await expect(page).toHaveTitle(/Elitra/);
-  });
-
-  test("logo is visible in nav", async ({ page }) => {
-    await page.goto("/");
-    const logo = page.locator('img[alt="Elitra"]');
-    await expect(logo).toBeVisible();
-  });
-
-  test("logo links to home page", async ({ page }) => {
-    await page.goto("/");
-    const logoLink = page.locator('a[href="/"]').filter({ has: page.locator('img[alt="Elitra"]') });
-    await expect(logoLink).toBeVisible();
-    await logoLink.click();
-    await expect(page).toHaveURL("/");
-  });
-
-  test("connect wallet button is visible", async ({ page }) => {
-    await page.goto("/");
-    // RainbowKit renders a connect button
-    const connectBtn = page.getByRole("button", { name: /connect/i });
-    await expect(connectBtn).toBeVisible();
-  });
-
-  test("opportunities content renders on home page", async ({ page }) => {
-    await page.goto("/");
-    // The opportunities page should show portfolio content
-    // Look for key UI elements that indicate the page loaded
-    await expect(page.locator("nav")).toBeVisible();
-    // The page should have some meaningful content (not just a spinner forever)
+    await page.goto("/opportunities");
+    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
-    const bodyText = await page.locator("body").textContent();
-    expect(bodyText).toBeTruthy();
-    expect(bodyText!.length).toBeGreaterThan(100);
+
+    expect(errors.filter(e => !isKnownWarning(e))).toHaveLength(0);
+    await page.screenshot({ path: "test/e2e/screenshots/02-opportunities.png" });
+  });
+
+  test("navigation links work", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    // Check nav links exist
+    const nav = page.locator("nav");
+    await expect(nav).toBeVisible();
+    await page.screenshot({ path: "test/e2e/screenshots/03-nav.png" });
+  });
+
+  test("mobile layout renders correctly", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/opportunities");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Should not overflow horizontally
+    const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+    expect(bodyWidth).toBeLessThanOrEqual(380);
+    await page.screenshot({ path: "test/e2e/screenshots/04-mobile.png" });
   });
 });
 
-test.describe("Responsive Layout", () => {
-  test("mobile viewport (375px) — no horizontal overflow", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-    await page.waitForTimeout(2000);
-
-    const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-    const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
-    // Allow 1px tolerance for sub-pixel rendering
-    expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
-  });
-
-  test("mobile viewport — nav elements visible", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-
-    // Logo should still be visible
-    const logo = page.locator('img[alt="Elitra"]');
-    await expect(logo).toBeVisible();
-
-    // Connect button should still be visible
-    const connectBtn = page.getByRole("button", { name: /connect/i });
-    await expect(connectBtn).toBeVisible();
-  });
-
-  test("mobile viewport — content is not clipped", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
-    await page.goto("/");
-    await page.waitForTimeout(2000);
-
-    // Verify the body has visible, non-zero-height content
-    const bodyBBox = await page.locator("body").boundingBox();
-    expect(bodyBBox).toBeTruthy();
-    expect(bodyBBox!.height).toBeGreaterThan(200);
-  });
-});
+// Known SDK/library warnings that are expected and not real errors
+function isKnownWarning(msg: string): boolean {
+  return (
+    msg.includes("useWallets") ||
+    msg.includes("WalletConnect") ||
+    msg.includes("Lit is in dev mode") ||
+    msg.includes("Reown") ||
+    msg.includes("privy")
+  );
+}

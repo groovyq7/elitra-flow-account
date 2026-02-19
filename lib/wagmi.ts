@@ -87,9 +87,18 @@ const connectors = connectorsForWallets(
 
 // WalletConnect project ID - in production this should be from env vars
 
+// In test mode, add the mock connector so tests can auto-connect without MetaMask
+const testConnectors =
+  process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true"
+    ? (() => {
+        const { mock } = require("wagmi/connectors");
+        return [mock({ accounts: [process.env.NEXT_PUBLIC_TEST_WALLET_ADDRESS as `0x${string}` || "0xc6D299a212868f12A5F05f9e414Af662615aF715"] })];
+      })()
+    : [];
+
 export const config = createConfig({
   chains: [citreaTestnet, sepolia, arbitrumSepolia, baseSepolia],
-  connectors: connectors,
+  connectors: process.env.NEXT_PUBLIC_USE_TEST_WALLET === "true" ? testConnectors : connectors,
   transports: {
     [citreaTestnet.id]: http(),
     [sepolia.id]: http(),
