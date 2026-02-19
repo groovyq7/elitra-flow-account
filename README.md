@@ -1,6 +1,6 @@
 # Elitra — SpiceFlow DeFi App
 
-Elitra is a production DeFi application built on Next.js 14 (App Router) that integrates with the **SpiceFlow SDK** for cross-chain vault deposits, withdrawals, and portfolio management. It runs on **SEI Mainnet** (chain 1329) with multi-chain support.
+Elitra is a production DeFi application built on Next.js 14 (App Router) that integrates with the **SpiceFlow SDK** for cross-chain vault deposits, withdrawals, and portfolio management. It runs on **Citrea Testnet** (chain 5115) with multi-chain support (Sepolia, Arbitrum Sepolia, Base Sepolia for cross-chain bridging).
 
 ---
 
@@ -38,8 +38,11 @@ Edit `.env.local` and fill in:
 | `NEXT_PUBLIC_PRIVY_APP_ID` | Yes | Privy app ID — use `cmlsy3eup004z0cjskfxwce8n` (Elitra Fork) |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect v2 project ID (get from cloud.walletconnect.com) |
 | `MONGODB_URI` | Yes | MongoDB connection string for campaign registrations |
+| `SPICENET_RELAYER_DESTINATION` | Yes (prod) | Full URL of the Spicenet TX Submission API (proxied through `/api/relayer`) |
 | `NEXT_PUBLIC_POSTHOG_KEY` | No | PostHog analytics key |
-| `RPC_URL` | No | SEI EVM RPC URL (defaults to public endpoint) |
+| `NEXT_PUBLIC_GA_ID` | No | Google Analytics measurement ID (e.g. `G-XXXXXXXXXX`) |
+| `GRAPHQL_ENDPOINT` | No | HyperIndex GraphQL endpoint for historical vault data |
+| `NEXT_PUBLIC_RELAYER_API_URL` | No | Override relayer URL for direct browser → relayer calls (not recommended in prod) |
 
 See `.env.example` for the full list with documentation.
 

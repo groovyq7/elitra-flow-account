@@ -216,3 +216,32 @@ SDK vendor removes it upstream.
 ABI files in `lib/abis/` include some unused ABIs for future use — do not delete without checking with the Spicenet team.
 
 See `lib/abis/README.md` for a full breakdown of which ABIs are actively used vs. included for future features or external integrators.
+
+---
+
+## Centralized SpiceFlow Constants (lib/spiceflowConfig.ts)
+
+`WCBTC_ADDRESS`, `SOLVER_ADDRESS`, `DELEGATE_CONTRACTS`, `SUPPORTED_CHAIN_IDS`, and `SPICENET_API_URL` are **single-source-of-truth** constants in `lib/spiceflowConfig.ts`.
+
+Do NOT re-define these locally in components. Always import:
+
+```ts
+import { WCBTC_ADDRESS, SOLVER_ADDRESS } from "@/lib/spiceflowConfig";
+```
+
+### Withdrawal Slippage — Always Pass minAmount
+
+`bulkWithdrawNow(token, shares, minimumAssets, recipient)` requires a minimum assets guard:
+
+```ts
+// ✅ Correct: 0.5% slippage protection
+const assetsInWei = (sharesInWei * vaultRate) / SCALE;
+const minimumAssets = assetsInWei - (assetsInWei * 5n) / 1000n; // 99.5%
+writeWithdraw({ args: [token, shares, minimumAssets, receiver] });
+
+// ❌ Wrong: no slippage protection, user can receive nothing
+writeWithdraw({ args: [token, shares, 0n, receiver] });
+```
+
+The SpiceWithdrawModal (SDK-driven flow) handles this correctly via `withdrawBatches`.
+The standard WithdrawModal (direct teller call) must also apply slippage — verified in Pass 25.
