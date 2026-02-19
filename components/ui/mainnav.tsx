@@ -67,7 +67,7 @@ export default function MainNav() {
     setIsDarkMode(isDark);
   }, []);
 
-  const { data: vaults, isLoading: vaultsLoading } = useVaultList();
+  const { data: vaults } = useVaultList();
   const chain = useConfig().getClient().chain;
   const [isTvlLoading, setIsTvlLoading] = useState(true);
   const isHome = false;
