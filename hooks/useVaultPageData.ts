@@ -61,8 +61,15 @@ export function useVaultPageData({
 
     async function getVaultInfo() {
       if (!vault) return;
-      const _vaultInfo = await getVaultByIdWithSubgraph(vault.id, vaultChain.id);
-      if (!cancelled) setVaultData(_vaultInfo);
+      try {
+        const _vaultInfo = await getVaultByIdWithSubgraph(vault.id, vaultChain.id);
+        // Only set vaultData if the result is a valid vault object.
+        // null / undefined means the vault was not found in the subgraph.
+        if (!cancelled && _vaultInfo) setVaultData(_vaultInfo);
+      } catch {
+        // Silently ignore subgraph errors — vaultData stays undefined until
+        // a successful fetch. The page falls back to the basic vault data.
+      }
     }
     getVaultInfo();
     return () => {
@@ -224,7 +231,10 @@ export function useVaultPageData({
       }
     }
 
-    getUserPnl();
+    getUserPnl().catch(() => {
+      // Silently ignore PnL fetch errors — position data stays undefined
+      // until the next successful fetch (e.g. after network recovery).
+    });
     return () => {
       cancelled = true;
     };
