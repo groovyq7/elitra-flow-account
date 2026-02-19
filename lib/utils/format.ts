@@ -3,7 +3,7 @@ export function formatTokenAmount(amount: bigint | number | string, decimals = 1
 
   if (isNaN(value) || !isFinite(value)) return "0";
   if (value === 0) return "0";
-  if (value < 0.000001) return "<0.000001";
+  if (value > 0 && value < 0.000001) return "<0.000001";
 
   // If value is less than 1 and displayDecimals is less than 6, force at least 6 decimals
   const decimalsToShow = value > 0 && value < 1 && displayDecimals < 6 ? 6 : displayDecimals;
