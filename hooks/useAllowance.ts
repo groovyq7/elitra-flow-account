@@ -8,17 +8,25 @@ import {
   useWriteContract,
 } from "wagmi"
 import { ErrorHandler } from "@/services/ErrorHandler"
+import { isAddress } from "viem"
 
-// Use the largest uint256 value for max approval
+// Use the largest uint256 value for max approval (EIP-2612 infinite approval pattern)
 const MAX_UINT256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
 
 export function useAllowance(selectedTokenAddressIn: string, spender: string) {
   const { address } = useAccount()
+
+  // Validate addresses before using them in contract reads/writes
+  const isTokenValid = isAddress(selectedTokenAddressIn)
+  const isSpenderValid = isAddress(spender)
+
   const { data: allowanceAmount = BigInt(0), refetch } = useReadContract({
-    address: selectedTokenAddressIn as `0x${string}`,
+    address: isTokenValid ? (selectedTokenAddressIn as `0x${string}`) : undefined,
     abi: ERC20_ABI,
     functionName: "allowance",
     args: [address as `0x${string}`, spender as `0x${string}`],
+    // Pause query when addresses are invalid
+    query: { enabled: isTokenValid && isSpenderValid && !!address },
   })
 
   const {
@@ -35,13 +43,27 @@ export function useAllowance(selectedTokenAddressIn: string, spender: string) {
     data: receipt,
   } = useWaitForTransactionReceipt({ hash })
 
-  const writeAllowance = (value = MAX_UINT256) =>
+  /**
+   * Approve `spender` to spend `value` tokens on behalf of the connected wallet.
+   * Defaults to MAX_UINT256 (infinite approval) — standard DeFi UX.
+   * Guards against invalid token or spender addresses before submitting.
+   */
+  const writeAllowance = (value = MAX_UINT256) => {
+    if (!isTokenValid) {
+      toast.error("Invalid token address — cannot approve")
+      return
+    }
+    if (!isSpenderValid) {
+      toast.error("Invalid spender address — cannot approve")
+      return
+    }
     writeContract({
       address: selectedTokenAddressIn as `0x${string}`,
       abi: ERC20_ABI,
       functionName: "approve",
       args: [spender as `0x${string}`, value],
     })
+  }
 
   useEffect(() => {
     if (error) {
