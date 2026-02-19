@@ -76,21 +76,25 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-title" content="Elitra" />
         <link rel="manifest" href="/site.webmanifest" />
-        {/* Google Analytics gtag.js */}
-        <script
-          async
-          src={`https://www.googletagmanager.com/gtag/js?id=G-9X9042JDQQ`}
-        ></script>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-9X9042JDQQ');
-          `,
-          }}
-        />
+        {/* Google Analytics gtag.js — only loaded when NEXT_PUBLIC_GA_ID is set */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <script
+              async
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+            />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+              `,
+              }}
+            />
+          </>
+        )}
       </head>
       <body
         className="font-sans antialiased"

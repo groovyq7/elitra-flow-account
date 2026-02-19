@@ -10,6 +10,7 @@ in the Vercel project dashboard under **Settings → Environment Variables**.
 | `NEXT_PUBLIC_PRIVY_APP_ID` | ✅ Yes | Privy authentication app ID. Use the Elitra Fork app: `cmlsy3eup004z0cjskfxwce8n`. After deploying to a new domain, add that domain to the allowed origins list in the Privy dashboard. |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | ✅ Yes | WalletConnect v2 project ID. Get one at [cloud.walletconnect.com](https://cloud.walletconnect.com). |
 | `MONGODB_URI` | ✅ Yes | MongoDB connection string for storing campaign/waitlist wallet registrations. Use `mongodb+srv://...` for Atlas (TLS is implicit). Add `?tls=true` if using a plain `mongodb://` URI. |
+| `NEXT_PUBLIC_GA_ID` | Optional | Google Analytics measurement ID (e.g. `G-XXXXXXXXXX`). If not set, Google Analytics is not loaded. |
 | `NEXT_PUBLIC_POSTHOG_KEY` | ⚠️ Recommended | PostHog analytics project API key (`phc_...`). If omitted, analytics are silently disabled. |
 | `NEXT_PUBLIC_POSTHOG_HOST` | ⚠️ Recommended | PostHog API host. Defaults to `https://eu.i.posthog.com`. |
 | `GRAPHQL_ENDPOINT` | ⚠️ Recommended | HyperIndex GraphQL endpoint for live vault metrics. Defaults to the dev endpoint (see Known Blockers). |
