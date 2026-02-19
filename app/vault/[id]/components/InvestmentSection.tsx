@@ -18,6 +18,7 @@ export function InvestmentSection({ apy, tokenSymbol }: InvestmentSectionProps) 
           <span className="text-muted-foreground text-sm">Amount to invest</span>
           <input
             type="number"
+            aria-label="Investment amount"
             min={0}
             value={amount}
             onChange={e => setAmount(Number(e.target.value))}

@@ -340,6 +340,8 @@ export default function OpportunitiesPage() {
                       setShowPortfolioOverview(!showPortfolioOverview)
                     }
                     className="hidden md:flex items-center rounded-lg hover:bg-muted/50 transition-colors cursor-pointer p-2"
+                    aria-label={showPortfolioOverview ? "Hide portfolio overview" : "Show portfolio overview"}
+                    aria-expanded={showPortfolioOverview}
                     title="Toggle Available Assets List Overview"
                   >
                     <Eye
@@ -513,6 +515,8 @@ export default function OpportunitiesPage() {
               <button
                 onClick={() => setShowGrowthChart(!showGrowthChart)}
                 className="hidden md:flex items-center rounded-lg hover:bg-muted/50 transition-colors cursor-pointer p-2"
+                aria-label={showGrowthChart ? "Hide growth chart" : "Show growth chart"}
+                aria-expanded={showGrowthChart}
                 title="Toggle Growth Chart"
               >
                 <BarChart3

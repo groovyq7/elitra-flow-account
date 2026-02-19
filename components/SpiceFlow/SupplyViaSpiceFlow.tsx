@@ -317,11 +317,15 @@ const SupplyViaSpiceFlowInner: React.FC = () => {
           {step === "idle" && (
             <>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">
+                <label
+                  htmlFor="supply-amount-input"
+                  className="block text-sm font-medium text-foreground mb-1.5"
+                >
                   Amount
                 </label>
                 <div className="relative">
                   <input
+                    id="supply-amount-input"
                     type="text"
                     inputMode="decimal"
                     value={amount}

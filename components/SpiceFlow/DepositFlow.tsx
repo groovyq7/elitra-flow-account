@@ -304,9 +304,10 @@ export const DepositFlow: React.FC = () => {
           <h2 className="text-lg font-bold text-foreground">Deposit</h2>
           <button
             onClick={handleClose}
+            aria-label="Close deposit dialog"
             className="text-muted-foreground hover:text-foreground"
           >
-            &#x2715;
+            <span aria-hidden="true">&#x2715;</span>
           </button>
         </div>
         <p className="text-sm text-muted-foreground mb-2">

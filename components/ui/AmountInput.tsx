@@ -127,6 +127,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <input
+            aria-label={`Amount in ${selectedToken?.symbol ?? "token"}`}
             inputMode="decimal"
             pattern="^[0-9]*[.,]?[0-9]*$"
             placeholder="0.00"
@@ -145,6 +146,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
             <button
               type="button"
+              aria-label={`Select token — currently ${selectedToken?.symbol}`}
               onClick={() => setIsTokenSelectorOpen(true)}
               className="flex items-center gap-2 px-2 py-2 rounded-md bg-gray-100 border border-gray-300 hover:bg-gray-200"
             >
