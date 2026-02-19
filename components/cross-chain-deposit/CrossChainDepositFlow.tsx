@@ -94,13 +94,20 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
     });
   }, [handleClose]);
 
-  const handleDepositComplete = useCallback(() => {
+  const handleDepositComplete = useCallback(async () => {
     completedRef.current = true;
     trackDepositSuccess({ type: 'cross_chain_deposit', chainId: selectedChainId });
+    // Switch back to Citrea after the cross-chain deposit succeeds so the user
+    // is on the correct chain for subsequent vault interactions.
+    try {
+      await switchChainAsync({ chainId: 5115 });
+    } catch (error) {
+      console.error("Failed to switch back to Citrea after deposit:", error);
+    }
     if (onComplete && selectedChainId) {
       onComplete(selectedChainId);
     }
-  }, [onComplete, selectedChainId]);
+  }, [onComplete, selectedChainId, switchChainAsync]);
 
   // Reset state when modal opens to ensure clean state on every open.
   // Previously a 300ms delayed reset on close, which races with rapid close→reopen.
@@ -164,9 +171,17 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
 
     const handleCrossChainDepositSkipped = () => {
       completedRef.current = true;
-      if (onComplete && selectedChainId) {
-        onComplete(selectedChainId);
-      }
+      // Switch back to Citrea when the deposit step is skipped (e.g. user already
+      // has sufficient balance) so the wallet is on the right chain afterwards.
+      switchChainAsync({ chainId: 5115 })
+        .catch((error) => {
+          console.error("Failed to switch back to Citrea after skip:", error);
+        })
+        .finally(() => {
+          if (onComplete && selectedChainId) {
+            onComplete(selectedChainId);
+          }
+        });
     };
 
     window.addEventListener("airdrop-skipped", handleAirdropSkipped);
@@ -176,7 +191,7 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
       window.removeEventListener("airdrop-skipped", handleAirdropSkipped);
       window.removeEventListener("cross-chain-deposit-skipped", handleCrossChainDepositSkipped);
     };
-  }, [onComplete, selectedChainId]);
+  }, [onComplete, selectedChainId, switchChainAsync]);
 
   // Reset login progress state when authentication status changes
   useEffect(() => {
