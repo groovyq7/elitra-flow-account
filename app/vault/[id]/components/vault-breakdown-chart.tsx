@@ -13,10 +13,9 @@ import type { ProtocolData, Vault, VaultBreakdown } from "@/lib/types";
 import { formatAPY, shortenAddress } from "@/lib/utils/format";
 import { fetchProtocolBreakdown } from "@/lib/utils/fetch-protocol-breakdown";
 import { Badge } from "../../../../components/ui/badge";
-import { Copy, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useAccount, useConfig } from "wagmi";
-import { getTokenBalance } from "@/lib/utils/get-token-balance";
 
 interface VaultBreakdownChartProps {
   breakdown: VaultBreakdown[];
@@ -43,16 +42,16 @@ const COLORS = [
 export function VaultBreakdownChart({
   vault,
   breakdown,
-  totalSupply,
-  rate,
-  price,
+  totalSupply: _totalSupply,
+  rate: _rate,
+  price: _price,
   totalTvl,
   strategy,
   apy,
 }: VaultBreakdownChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const chain = useConfig().getClient().chain;
-  const { address: userAddress } = useAccount();
+  const { address: _userAddress } = useAccount();
   const [breakdownData, setBreakdownData] = useState<ProtocolData[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -104,7 +103,7 @@ export function VaultBreakdownChart({
           vault.token0?.address;
         const data = await fetchProtocolBreakdown(breakdown, tokenAddr);
         if (!cancelled) setBreakdownData(data);
-      } catch (e) {
+      } catch {
         if (!cancelled) setBreakdownData(null);
       } finally {
         if (!cancelled) setLoading(false);

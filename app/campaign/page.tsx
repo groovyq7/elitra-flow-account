@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { RegistrationForm } from "./components/RegistrationForm";
 import Image from "next/image";
 
 export default function CampaignPage() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <ErrorBoundary>

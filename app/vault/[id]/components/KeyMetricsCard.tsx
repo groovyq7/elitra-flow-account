@@ -4,7 +4,6 @@ import { Separator } from "@/components/ui/separator";
 import { TrendingUp, PieChart, Calendar, ShieldAlert, Coins, ExternalLink } from "lucide-react";
 import { formatTVL } from "@/lib/utils/format";
 import { VaultBreakdown } from "@/lib/types";
-import Image from "next/image";
 import Link from "next/link";
 
 interface KeyMetricsCardProps {

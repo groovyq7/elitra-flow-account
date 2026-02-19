@@ -14,7 +14,6 @@ import { VaultBreakdownChart } from "@/app/vault/[id]/components/vault-breakdown
 import {
   formatAPY,
   formatPrice,
-  shortenAddress,
 } from "@/lib/utils/format";
 import { Coins, ArrowLeft } from "lucide-react";
 import Image from "next/image";
@@ -45,7 +44,8 @@ export default function VaultDetailsPage() {
 
   // ── Legacy modal state (kept for DepositModal / WithdrawModal / TokenSelectorModal) ──
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"deposit" | "withdraw">("deposit");
+  // modalType controls which modal to show; setModalType reserved for future withdraw flow
+  const [modalType, _setModalType] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState("");
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState<TokenType | undefined>();
@@ -62,7 +62,7 @@ export default function VaultDetailsPage() {
   const vaultChain =
     vault?.chainId ? chains.find((c) => c.id === vault.chainId) || chain : chain;
 
-  const { totalSupply, formattedTotalSupply } = useTotalSupply(vaultId);
+  const { totalSupply: _totalSupply, formattedTotalSupply } = useTotalSupply(vaultId);
 
   // ── All derived/async data via hook ────────────────────────────────────
   const {

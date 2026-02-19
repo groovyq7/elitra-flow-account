@@ -10,7 +10,6 @@ import AppToaster from "@/components/providers/AppToaster";
 import { Toaster } from "@/components/ui/toaster";
 import { AppFooter } from "@/components/ui/footer";
 import { Analytics } from "@vercel/analytics/next";
-import { CampaignRibbon } from "@/components/ui/campaign-ribbon";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
 import { SpiceFlowProvider } from "@/components/providers/SpiceFlowProvider";
 import { GlobalModals } from "@/components/SpiceFlow/GlobalModals";

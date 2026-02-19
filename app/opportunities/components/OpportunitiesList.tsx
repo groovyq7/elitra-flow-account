@@ -13,8 +13,6 @@ import Image from "next/image";
 import { getTokenImage } from "@/lib/utils";
 import {
   formatAPY,
-  formatCurrency,
-  formatPercentage,
   formatPrice,
 } from "@/lib/utils/format";
 import React, { useEffect, useState } from "react";
@@ -25,7 +23,6 @@ import {
 } from "@/lib/utils/get-token-balance";
 import { useConfig } from "wagmi";
 import { Vault } from "@/lib/types";
-import { zeroAddress } from "viem";
 
 interface OpportunitiesListProps {
   availableVaults: Vault[];

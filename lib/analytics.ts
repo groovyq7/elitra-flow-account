@@ -15,7 +15,7 @@ function safeCapture(event: string, properties?: Dict) {
       ts: Date.now(),
     }
     posthog?.capture?.(event, { ...common, ...(properties || {}) })
-  } catch (_) {
+  } catch {
     // swallow errors
   }
 }
@@ -52,14 +52,14 @@ export function identifyUser(address: string, props?: Dict) {
       wallet: distinctId,
       ...props,
     })
-  } catch (_) {}
+  } catch {}
 }
 
 export function resetUser() {
   if (typeof window === 'undefined') return
   try {
     posthog?.reset?.()
-  } catch (_) {}
+  } catch {}
 }
 
 // Wallet/chain lifecycle

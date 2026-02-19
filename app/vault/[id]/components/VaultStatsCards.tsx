@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { formatAPY, formatTVL, formatSharePrice, shortenAddress } from "@/lib/utils/format";
+import { formatSharePrice, shortenAddress } from "@/lib/utils/format";
 import type { Vault } from "@/lib/types";
 
 interface VaultStatsCardsProps {

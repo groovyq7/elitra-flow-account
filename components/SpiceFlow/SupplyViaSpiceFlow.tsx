@@ -14,7 +14,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { encodeFunctionData, parseUnits, type Address, type Hex } from "viem";
+import { encodeFunctionData, parseUnits, type Address } from "viem";
 import {
   useGaslessTransaction,
   type Call,

@@ -1,6 +1,6 @@
 import type { Vault, VaultRateSnapshot } from "@/lib/types";
 import { zeroAddress } from "viem";
-import { fetchQuery, cache as gqlCache } from "@/lib/utils/query";
+import { fetchQuery } from "@/lib/utils/query";
 import { computeApy24hLinear } from "../utils/apy";
 
 /** Raw vault metrics shape returned by the subgraph */
@@ -322,7 +322,7 @@ export async function getVaultsByChainWithSubgraph(
 
     enrichedVaultCache[cacheKey] = { vaults: enriched, timestamp: Date.now() };
     return enriched;
-  } catch (e) {
+  } catch {
     // On failure return base vaults
     return baseVaults;
   }
@@ -427,7 +427,7 @@ export async function getVaultByIdWithSubgraph(
     } as Vault;
     singleVaultCache[cacheKey] = { vault: enriched, timestamp: Date.now() };
     return enriched;
-  } catch (e) {
+  } catch {
     // fallback to base definition
     singleVaultCache[cacheKey] = { vault: base, timestamp: Date.now() };
     return base;

@@ -1,15 +1,9 @@
 import {
   Chain as ViemChain,
-  PublicClient,
-  createPublicClient,
-  http,
-  defineChain,
 } from "viem";
 import {
   sepolia,
   arbitrumSepolia,
-  mainnet,
-  basecampTestnet,
   citreaTestnet,
   baseSepolia,
 } from "viem/chains";

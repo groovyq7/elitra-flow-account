@@ -34,7 +34,6 @@ import { getVaultsByChain, getVaultsByChainWithSubgraph } from "@/lib/contracts/
 import { getChainConfig } from "@/lib/utils/chains";
 import { useEmbeddedWalletAddress } from "@spicenet-io/spiceflow-ui";
 
-import { trackModalOpen } from "@/lib/analytics";
 import { useSpiceStore } from "@/store/useSpiceStore";
 import { useOpportunitiesModals } from "@/hooks/useOpportunitiesModals";
 import { usePortfolioData } from "@/hooks/usePortfolioData";

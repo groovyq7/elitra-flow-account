@@ -30,8 +30,8 @@ export function VaultPositionCard({
   isApproving,
   isDepositing,
   needsApproval,
-  withdrawAmount,
-  setWithdrawAmount,
+  withdrawAmount: _withdrawAmount,
+  setWithdrawAmount: _setWithdrawAmount,
   handleWithdraw,
   isWithdrawing,
 }: VaultPositionCardProps) {

@@ -106,7 +106,7 @@ export async function fetchYeiData(
 
       results.push({ vaultId: asset, apy: supplyApy, yieldScore, liquidityScore, protocol: "yei" });
       if (filterVaultId) break;
-    } catch (e) {
+    } catch {
       // Skip asset on error but continue others
       if (!filterVaultId) continue;
       // If filtering and an error occurs for the target vault, treat as not found

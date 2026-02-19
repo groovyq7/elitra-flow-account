@@ -1,5 +1,5 @@
 import { parseUnits } from "viem";
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
@@ -7,7 +7,7 @@ import { getTokenImage } from "@/lib/utils";
 import React, { useEffect, useMemo, useState } from "react";
 import { useAccount, useChainId, useChains } from "wagmi";
 import { useVaultData } from "@/hooks/use-vault-data";
-import { TokenType, VaultType } from "@/lib/types";
+import { TokenType } from "@/lib/types";
 import { TransactionStatusModal } from "./TransactionStatusModal";
 import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
 import { getAddresses } from "@/lib/constants";
@@ -40,8 +40,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   amount,
   setAmount,
   selectedToken,
-  setSelectedToken,
-  isTokenSelectorOpen,
+  setSelectedToken: _setSelectedToken,
+  isTokenSelectorOpen: _isTokenSelectorOpen,
   setIsTokenSelectorOpen,
 }) => {
   const chainId = useChainId();
@@ -57,7 +57,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [vaultRate, setVaultRate] = useState<bigint | null>(null); // assets per share scaled 1e18
   const [tokenPrice, setTokenPrice] = useState<number | null>(null); // token price in USD
-  const [isRateLoading, setIsRateLoading] = useState(false);
+  const [_isRateLoading, setIsRateLoading] = useState(false);
 
   // Prepare hooks outside the handler
   const vaultAddresses = getAddresses(chainId, selectedToken?.symbol) ?? {
@@ -97,7 +97,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           setVaultRate(rateData.rateRaw as bigint);
           setTokenPrice(priceData.price);
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) setVaultRate(null);
       } finally {
         if (!cancelled) setIsRateLoading(false);
@@ -117,7 +117,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     return num.toFixed(underlyingDecimals > 8 ? 8 : underlyingDecimals);
   };
 
-  const { estimatedAssets, minAmount, formattedUSDAmount, formattedMinAmount } =
+  const { estimatedAssets: _estimatedAssets, minAmount: _minAmount, formattedUSDAmount, formattedMinAmount } =
     useMemo(() => {
       if (!amount || Number(amount) <= 0) {
         return {
@@ -170,10 +170,8 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
     isSuccess: isWithdrawSuccess,
     isError: isWithdrawError,
     isConfirming: isWithdrawConfirming,
-    isPending: isWithdrawPending,
     error: withdrawError,
     hash: withdrawHash,
-    receipt: withdrawReceipt,
     reset: resetWithdraw,
   } = useWithdraw();
 
@@ -183,7 +181,6 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
       if (!address) throw new Error("Wallet not connected");
       if (!withdrawToken) throw new Error("Vault not found for selected token");
 
-      let withdrawResult;
       try {
         trackWithdrawAttempt({
           tokenSymbol: selectedToken.symbol,
@@ -198,7 +195,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({
           withdrawToken?.token0?.wrapped?.address ??
           withdrawToken?.token0?.wrappedAddress ??
           withdrawToken?.token0?.address;
-        withdrawResult = writeWithdraw({
+        writeWithdraw({
           address: vaultAddresses.tellerAddress as `0x${string}`,
           abi: TELLER_ABI,
           functionName: "bulkWithdrawNow",

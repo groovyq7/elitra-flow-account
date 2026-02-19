@@ -20,7 +20,7 @@ export function ChainStatus() {
       // wagmi infers a strict union type for chainId from the config; cast to
       // satisfy the type while staying runtime-correct.
       await switchChainAsync({ chainId: targetChainId as Parameters<typeof switchChainAsync>[0]["chainId"] });
-    } catch (error) {
+    } catch {
       toast({
         title: "Network switch failed",
         description: "Please switch the network manually in your wallet.",

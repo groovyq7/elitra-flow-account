@@ -18,7 +18,7 @@ export class VaultSDK {
     return vault || null
   }
 
-  async getUserPositions(walletAddress: string): Promise<UserPosition[]> {
+  async getUserPositions(_walletAddress: string): Promise<UserPosition[]> {
     // In production, this would make on-chain calls to get user positions
     const vaults = await this.getVaultList()
 
@@ -36,12 +36,12 @@ export class VaultSDK {
     })
   }
 
-  async getUserRewards(walletAddress: string, vaultId?: string): Promise<bigint> {
+  async getUserRewards(_walletAddress: string, _vaultId?: string): Promise<bigint> {
     // Mock implementation - in production this would be contract calls
     return BigInt(Math.floor(Math.random() * 50)) * (10n ** 18n)
   }
 
-  async getVaultTransactions(walletAddress: string, vaultId?: string): Promise<VaultTransaction[]> {
+  async getVaultTransactions(_walletAddress: string, _vaultId?: string): Promise<VaultTransaction[]> {
     // Mock implementation - in production this would query events
     return [
       {
@@ -70,14 +70,13 @@ export class VaultSDK {
     }))
   }
 
-  async getUserPositionsAllChains(walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
+  async getUserPositionsAllChains(_walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
     // In production, this would query user positions across all chains
     const supportedChains = [1, 42161, 137, 10, 8453]
     return supportedChains.map((chainId) => {
-      const sdk = new VaultSDK(chainId)
       return {
         chainId,
-        positions: [], // Would be populated with actual positions
+        positions: [], // Would be populated with actual positions (new VaultSDK(chainId) as needed)
       }
     })
   }
@@ -126,12 +125,12 @@ export class MultiChainVaultSDK {
     )
   }
 
-  async getUserPositionsAllChains(walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
+  async getUserPositionsAllChains(_walletAddress: string): Promise<{ chainId: number; positions: UserPosition[] }[]> {
     const supportedChains = [1, 42161, 137, 10, 8453]
     return Promise.all(
       supportedChains.map(async (chainId) => ({
         chainId,
-        positions: await this.getSDK(chainId).getUserPositions(walletAddress),
+        positions: await this.getSDK(chainId).getUserPositions(_walletAddress),
       })),
     )
   }

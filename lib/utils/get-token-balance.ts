@@ -55,7 +55,7 @@ export const getTokenBalance = async (
     const formatted = formatUnits(balance, decimals);
 
     return { balance, decimals, formatted };
-  } catch (error) {
+  } catch {
     return { balance: BigInt(0), decimals: 18, formatted: "0", error: true };
   }
 };
@@ -83,7 +83,7 @@ export const getTokenSupply = async (token: string, chain: Chain) => {
     const formatted = formatUnits(totalSupply, decimals);
 
     return { totalSupply, formatted };
-  } catch (error) {
+  } catch {
     return { totalSupply: BigInt(0), error: true };
   }
 };
@@ -115,7 +115,7 @@ export const getVaultRate = async (symbol: string, chain: Chain) => {
     const formatted = formatUnits(rate, 18);
     rateCache[cacheKey] = { rateRaw: rate, timestamp: Date.now() };
     return { rate: formatted, rateRaw: rate, cached: false };
-  } catch (error) {
+  } catch {
     // Attempt stale cache fallback
     const accountantAddress = getAddresses(chain.id, symbol)?.accountantAddress;
     const cacheKey = `${chain.id}:${accountantAddress}`;
@@ -182,7 +182,7 @@ export const getTokenPrice = async (token: string) => {
       }
     }
     throw new Error("CoinGecko price not found");
-  } catch (cgError) {
+  } catch {
     // Fallback: Coinbase
     try {
       // Coinbase uses symbol-USD, e.g. ETH-USD
@@ -198,7 +198,7 @@ export const getTokenPrice = async (token: string) => {
         }
       }
       throw new Error("Coinbase price not found");
-    } catch (cbError) {
+    } catch {
       // Last resort: if we have a stale cache, return it despite age
       if (cached) {
         return { price: cached.price, error: true, cached: true, stale: true };

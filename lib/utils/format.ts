@@ -102,7 +102,7 @@ const toSubscript = (num: number) => {
 }
 
 export function toFixedDown(num: number, digits: number) {
-  let factor = 10 ** digits // Shift decimal point
+  const factor = 10 ** digits // Shift decimal point
   return (Math.floor(num * factor) / factor).toFixed(digits)
 }
 

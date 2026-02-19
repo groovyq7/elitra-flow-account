@@ -30,7 +30,7 @@ export const AmountInput: React.FC<AmountInputProps> = ({
   setAmount,
   selectedToken,
   setIsTokenSelectorOpen,
-  isDisabled = false,
+  isDisabled: _isDisabled = false,
   setIsDisabled,
   className = "",
   reload = false,

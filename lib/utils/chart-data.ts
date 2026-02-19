@@ -7,7 +7,7 @@ export function generateCurvedChartData(
   timeframe: 'weekly' | 'monthly' = 'weekly'
 ) {
   const data = [];
-  let date = new Date(startDate);
+  const date = new Date(startDate);
   let balance = initialBalance;
   const periodsPerYear = timeframe === 'weekly' ? 52 : 12;
   let growthRate = apy / 100 / periodsPerYear;
@@ -42,7 +42,7 @@ export function generateRealisticChartData(
   timeframe: 'weekly' | 'monthly' = 'weekly'
 ) {
   const data = [];
-  let date = new Date(startDate);
+  const date = new Date(startDate);
   let balance = initialBalance;
   
   // Calculate growth per period

@@ -79,7 +79,6 @@ export default function MainNav() {
 
   useEffect(() => {
     let cancelled = false;
-    let intervalId: ReturnType<typeof setInterval> | undefined;
 
     async function getVaultsTVL() {
       if (!vaults || vaults.length === 0) return;
@@ -103,7 +102,7 @@ export default function MainNav() {
           })
         );
         if (!cancelled) setVaultData(_vaultData);
-      } catch (e) {
+      } catch {
         // Error silently ignored (TVL fetch is best-effort)
       } finally {
         if (!cancelled) setIsTvlLoading(false);
@@ -112,12 +111,12 @@ export default function MainNav() {
     // initial fetch
     getVaultsTVL();
     // poll every 60s
-    intervalId = setInterval(() => {
+    const intervalId = setInterval(() => {
       getVaultsTVL();
     }, 60_000);
     return () => {
       cancelled = true;
-      if (intervalId) clearInterval(intervalId);
+      clearInterval(intervalId);
     };
   }, [vaults, chain?.id]);
 

@@ -13,7 +13,6 @@ import { trackModalOpen } from "@/lib/analytics";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {

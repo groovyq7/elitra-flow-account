@@ -3,12 +3,10 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowDown,
   CheckCircle,
-  Copy,
   ExternalLink,
   XCircle,
 } from "lucide-react";
 import Image from "next/image";
-import { getTokenImage } from "@/lib/utils";
 import React from "react";
 import { useConfig } from "wagmi";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -39,8 +37,8 @@ export const TransactionStatusModal: React.FC<TransactionStatusModalProps> = ({
   status,
   txHash,
   onClose,
-  copied,
-  onCopy,
+  copied: _copied,
+  onCopy: _onCopy,
   modalType,
   amount,
   amountUSD,

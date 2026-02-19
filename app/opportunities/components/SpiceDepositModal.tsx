@@ -37,8 +37,8 @@ type ModalStep = "chain-select" | "cross-chain-deposit" | "vault-deposit";
 export const SpiceDepositModal: React.FC<SpiceDepositModalProps> = ({
   open,
   onOpenChange,
-  tokenSymbol,
-  yieldPercentage,
+  tokenSymbol: _tokenSymbol,
+  yieldPercentage: _yieldPercentage,
 }) => {
   const [step, setStep] = useState<ModalStep>("chain-select");
   const [selectedChainId, setSelectedChainId] = useState<number | null>(null);

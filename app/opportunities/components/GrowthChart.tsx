@@ -199,9 +199,6 @@ export function GrowthChart({
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
-                    const holding = payload.find(
-                      (p) => p.dataKey === "holding"
-                    );
                     const staking = payload.find(
                       (p) => p.dataKey === "staking"
                     );

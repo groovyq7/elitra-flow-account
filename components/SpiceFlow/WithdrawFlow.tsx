@@ -65,7 +65,6 @@ const WithdrawFlowInner: React.FC = () => {
   const {
     isWithdrawOpen,
     closeWithdraw,
-    crossChainBalance,
     addWithdraw,
     deductBalance,
   } = useSpiceStore();

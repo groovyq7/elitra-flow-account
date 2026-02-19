@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AmountInput } from "@/components/ui/AmountInput";
 import { Button } from "@/components/ui/button";
 import { getTokenImage } from "@/lib/utils";
@@ -11,12 +11,11 @@ import { TransactionStatusModal } from "./TransactionStatusModal";
 import TELLER_ABI from "@/lib/abis/EliteraTeller.json";
 import { getAddresses, NATIVE_TOKEN_ADDRESS } from "@/lib/constants";
 import { useAllowance } from "@/hooks/useAllowance";
-import { config } from "@/lib/wagmi";
 import toast from "react-hot-toast";
 import { ErrorHandler } from "@/services/ErrorHandler";
 import { zeroAddress, parseUnits } from "viem";
 import { DialogTitle } from "@radix-ui/react-dialog";
-import { abbreviateNumber, formatAPY, formatPrice } from "@/lib/utils/format";
+import { formatAPY, formatPrice } from "@/lib/utils/format";
 import { getTokenPrice, getVaultRate } from "@/lib/utils/get-token-balance";
 import Image from "next/image";
 import { trackApprovalAttempt, trackApprovalResult, trackDepositAttempt, trackDepositFailed, trackDepositSuccess, trackModalOpen } from '@/lib/analytics'
@@ -40,8 +39,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   amount,
   setAmount,
   selectedToken,
-  setSelectedToken,
-  isTokenSelectorOpen,
+  setSelectedToken: _setSelectedToken,
+  isTokenSelectorOpen: _isTokenSelectorOpen,
   setIsTokenSelectorOpen,
 }) => {
   const chainId = useChainId();
@@ -58,7 +57,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
   const [vaultRate, setVaultRate] = useState<{ raw: bigint; formatted: string } | null>(null);
   const [tokenPrice, setTokenPrice] = useState<number | null>(null); // token price in USD
 
-  const [isRateLoading, setIsRateLoading] = useState(false);
+  const [_isRateLoading, setIsRateLoading] = useState(false);
 
   // Prepare hooks outside the handler
   const vaultAddresses =
@@ -93,7 +92,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         const rateBigInt: bigint = res.rateRaw ?? 0n;
         setTokenPrice(priceData.price);
         if (!cancelled) setVaultRate({raw: rateBigInt, formatted: res.rate });
-      } catch (e) {
+      } catch {
         if (!cancelled) setVaultRate(null);
       } finally {
         if (!cancelled) setIsRateLoading(false);
@@ -107,9 +106,9 @@ export const DepositModal: React.FC<DepositModalProps> = ({
 
   // Calculate estimated shares and min amount using vault rate
   const {
-    estimatedShares,
+    estimatedShares: _estimatedShares,
     minAmount,
-    formattedEstimatedShares,
+    formattedEstimatedShares: _formattedEstimatedShares,
     formattedMinAmount,
     formattedUSDAmount,
   } = useMemo(() => {
@@ -196,10 +195,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({
     isSuccess: isDepositSuccess,
     isError: isDepositError,
     isConfirming: isDepositConfirming,
-    isPending: isDepositPending,
     error: depositError,
     hash: depositHash,
-    receipt: depositReceipt,
     reset: resetDeposit,
   } = useDeposit();
 
@@ -231,7 +228,6 @@ export const DepositModal: React.FC<DepositModalProps> = ({
         await refetchAllowance();
       }
 
-      let depositResult;
       try {
         trackDepositAttempt({
           tokenSymbol: selectedToken.symbol,
@@ -243,7 +239,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
           tellerAddress: vaultAddresses.tellerAddress,
         })
         if (depositTokenAddress === zeroAddress) {
-          depositResult = writeDeposit({
+          writeDeposit({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
@@ -252,7 +248,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wagmi type doesn't infer `value` from JSON ABI payable mutability
           } as any);
         } else {
-          depositResult = writeDeposit({
+          writeDeposit({
             address: vaultAddresses.tellerAddress as `0x${string}`,
             abi: TELLER_ABI,
             functionName: "deposit",
@@ -412,7 +408,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({
                 // Only approve, don't deposit - show loading spinner on button but no modal
                 try {
                   writeAllowance(parsedAmount);
-                } catch (err: unknown) {
+                } catch {
                   toast.error("User rejected the approval transaction.");
                 }
               } else {

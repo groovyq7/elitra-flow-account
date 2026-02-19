@@ -139,7 +139,7 @@ export function DepositedAssetsTable({
             {tokenInfos
               .filter((token) => token.symbol?.toUpperCase().includes("WBTC") || token.symbol?.toUpperCase().includes("BTC") || token.symbol?.toUpperCase().includes("CBTC"))
               .map((token) => {
-                const vault = availableVaults.find(
+                const _vault = availableVaults.find(
                   (v: Vault) => v.id === token.token.address
                 );
                 return (
