@@ -133,7 +133,12 @@ export const AmountInput: React.FC<AmountInputProps> = ({
             placeholder="0.00"
             value={amount}
             onChange={(e) => {
-              const val = e.target.value.replace(/[^0-9.]/g, "");
+              let val = e.target.value.replace(/[^0-9.]/g, "");
+              // Prevent multiple decimal points (e.g. "1.2.3" → "1.23")
+              const dotParts = val.split(".");
+              if (dotParts.length > 2) {
+                val = dotParts[0] + "." + dotParts.slice(1).join("");
+              }
               setAmount(val);
             }}
             className={`text-3xl sm:text-3xl h-14 sm:h-16 pr-38 pl-4 w-full rounded-lg focus:outline-none transition text-left font-semibold bg-white appearance-none border ${
