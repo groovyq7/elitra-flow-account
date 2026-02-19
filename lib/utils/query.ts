@@ -20,6 +20,9 @@ const CACHE_DURATION = 60 * 1000
 const shouldUseGraphOnClient = false // EnvHandler.getInstance().getVariable("useGraphOnClient").toLowerCase() === "true"
 
 const graphEndpoint = process.env.GRAPHQL_ENDPOINT || "https://indexer.dev.hyperindex.xyz/18880d0/v1/graphql"
+// Maximum time (ms) to wait for a GraphQL response before aborting.
+// Prevents the UI from hanging indefinitely when the subgraph is slow or down.
+const FETCH_TIMEOUT_MS = 15_000
 export const graphClient = new GraphQLClient(graphEndpoint, {
   // Ensure we only ever send { query, variables } body – no persisted queries/extensions
   fetch: async (input, init) => {
@@ -84,6 +87,8 @@ export async function fetchQuery(
       abortController.abort()
     })
   }
+  // Auto-abort after FETCH_TIMEOUT_MS to prevent hanging on a slow/unavailable subgraph.
+  const timeoutId = setTimeout(() => abortController.abort(), FETCH_TIMEOUT_MS)
   entry.abortController = abortController
 
   try {
@@ -128,12 +133,15 @@ export async function fetchQuery(
       if (data.errors) throw new Error(JSON.stringify(data.errors))
       entry.data = data
     }
+    clearTimeout(timeoutId)
     entry.error = null
     entry.promise = undefined
     
     return { data: entry.data, error: entry.error }
   } catch (error: unknown) {
-    // If the error is due to aborting, remove the cache entry.
+    clearTimeout(timeoutId)
+    // If the error is due to aborting (timeout or external signal), remove the cache
+    // entry so the next call can retry rather than serving a stale null result.
     if (error instanceof Error && error.name === "AbortError") {
       cache.delete(key)
     } else {
