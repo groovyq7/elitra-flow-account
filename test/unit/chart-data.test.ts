@@ -79,6 +79,32 @@ describe("generateCurvedChartData", () => {
     }
   });
 
+  it("does not produce NaN or Infinity with very high APY (1000%)", () => {
+    const data = generateCurvedChartData("2025-01-01", 12, 1000, 1000, "weekly");
+    expect(data).toHaveLength(12);
+    for (const point of data) {
+      expect(Number.isNaN(point.value)).toBe(false);
+      expect(Number.isFinite(point.value)).toBe(true);
+      expect(point.value).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("balance decreases with negative APY (deflation scenario)", () => {
+    const data = generateCurvedChartData("2025-01-01", 6, 1000, -20, "weekly");
+    expect(data).toHaveLength(6);
+    // First point should be the initial balance
+    expect(data[0].value).toBe(1000);
+    // With negative APY the balance should fall below the starting value
+    expect(data[data.length - 1].value).toBeLessThan(data[0].value);
+  });
+
+  it("does not produce NaN with negative APY", () => {
+    const data = generateCurvedChartData("2025-01-01", 8, 1000, -50, "monthly");
+    for (const point of data) {
+      expect(Number.isNaN(point.value)).toBe(false);
+    }
+  });
+
   it("growth accelerates (each increment is larger than the previous)", () => {
     const data = generateCurvedChartData("2025-01-01", 5, 10000, 50, "weekly");
     const increments = data.slice(1).map((p, i) => p.value - data[i].value);
