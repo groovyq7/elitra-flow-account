@@ -126,11 +126,36 @@ useEffect(() => {
 }, [deps]);
 ```
 
+### ESLint Configuration
+
+`.eslintrc.json` enforces:
+- `no-console` (warn) — allows `console.error` / `console.warn` only
+- `prefer-const` (error) — use `const` for variables that are never reassigned
+- `@typescript-eslint/no-unused-vars` (error) — prefix intentionally unused vars/args with `_`
+
+Run: `npm run lint` — exits 0 with only react-hooks/exhaustive-deps warnings (pre-existing intentional dep suppressions).
+
+### Unused Variable Convention
+
+When a prop/param must exist in an interface but isn't used in the implementation, prefix with `_` using destructuring rename syntax:
+```ts
+// ✅ Correct
+function Foo({ bar: _bar, baz }: Props) { /* uses baz, not bar */ }
+
+// ✅ For catch blocks — just omit the binding
+} catch { /* no binding needed */ }
+```
+
 ### Console.log Policy
 
 - No `console.log` in production code
 - Use `console.error` / `console.warn` only inside `catch` blocks where structured logging isn't available
 - PostHog analytics (`lib/analytics.ts`) is the approved mechanism for event tracking
+
+### Dependencies
+
+Run `npm install` after pulling if `package.json` changed (lockfile may need sync after dependency changes).
+Removed unused dependencies in Feb 2026 deep review: `@dynamic-labs/ethereum`, `@dynamic-labs/sdk-react-core`, `jotai`.
 
 ---
 
