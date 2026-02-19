@@ -18,6 +18,14 @@ const RAY = 1e27; // 1e27 scaler
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(n, max));
 const toNum = (v: unknown) => Number(v);
 
+export type YeiVaultResult = {
+  vaultId: string;
+  apy: number;
+  yieldScore: number;
+  liquidityScore: number;
+  protocol: string;
+};
+
 function computeUtilizationRate(totalBorrows: bigint, totalSupply: bigint): number {
   if (totalSupply === 0n) return 0;
   const ratioScaled = (totalBorrows * 1_000_000n) / totalSupply;
@@ -44,74 +52,86 @@ function calculateYieldScore(supplyApy: number, borrowApy: number, utilizationRa
   return clamp(Math.round(score), 0, 100);
 }
 
+/**
+ * Core YEI data-fetching logic. Exported so the /api/apy route can call it
+ * directly (server-to-server function call) instead of making an HTTP self-request.
+ */
+export async function fetchYeiData(
+  filterVaultId: string | null
+): Promise<YeiVaultResult | YeiVaultResult[]> {
+  const cacheKey = `yei:${filterVaultId || 'all'}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached as YeiVaultResult | YeiVaultResult[];
+
+  const reserves = await client.readContract({
+    address: YEI_ADDRESS as `0x${string}`,
+    abi: yeiMarketAbi,
+    functionName: 'getReservesList',
+  }) as readonly `0x${string}`[];
+
+  const results: YeiVaultResult[] = [];
+
+  for (const asset of reserves) {
+    if (filterVaultId && asset.toLowerCase() !== filterVaultId) {
+      continue;
+    }
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: any = await client.readContract({ // ABI-decoded reserve data struct — no generated type
+        address: YEI_ADDRESS as `0x${string}`,
+        abi: yeiMarketAbi,
+        functionName: 'getReserveData',
+        args: [asset],
+      });
+
+      const aToken = data.aTokenAddress as `0x${string}`;
+      const varDebt = data.variableDebtTokenAddress as `0x${string}`;
+
+      const zero = '0x0000000000000000000000000000000000000000';
+      const [totalSupplyRaw, totalBorrowsRaw] = await Promise.all([
+        aToken && aToken !== zero ? client.readContract({ address: aToken, abi: erc20Abi, functionName: 'totalSupply' }) as Promise<bigint> : Promise.resolve(0n),
+        varDebt && varDebt !== zero ? client.readContract({ address: varDebt, abi: erc20Abi, functionName: 'totalSupply' }) as Promise<bigint> : Promise.resolve(0n),
+      ]);
+
+      const utilizationRate = computeUtilizationRate(totalBorrowsRaw, totalSupplyRaw);
+
+      const supplyApy = (toNum(data.currentLiquidityRate) / RAY) * 100;
+      const borrowApy = (toNum(data.currentVariableBorrowRate) / RAY) * 100;
+
+      const liquidityScore = calculateLiquidityScore(utilizationRate);
+      const yieldScore = calculateYieldScore(supplyApy, borrowApy, utilizationRate);
+
+      results.push({ vaultId: asset, apy: supplyApy, yieldScore, liquidityScore, protocol: "yei" });
+      if (filterVaultId) break;
+    } catch (e) {
+      // Skip asset on error but continue others
+      if (!filterVaultId) continue;
+      // If filtering and an error occurs for the target vault, treat as not found
+      throw new Error("Vault not found");
+    }
+  }
+
+  if (filterVaultId) {
+    if (results.length === 0) throw new Error("Vault not found");
+    setCached(cacheKey, results[0]);
+    return results[0];
+  }
+  setCached(cacheKey, results);
+  return results;
+}
+
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const vaultIdParam = url.searchParams.get('vaultId');
     const filterVaultId = vaultIdParam?.toLowerCase() || null;
 
-    // Cache key: yei + vaultId (or all)
-    const cacheKey = `yei:${filterVaultId || 'all'}`;
-    const cached = getCached(cacheKey);
-    if (cached) return NextResponse.json(cached);
-    const reserves = await client.readContract({
-      address: YEI_ADDRESS as `0x${string}`,
-      abi: yeiMarketAbi,
-      functionName: 'getReservesList',
-    }) as readonly `0x${string}`[];
-
-  const results: Array<{ vaultId: string; apy: number; yieldScore: number; liquidityScore: number; protocol: string }> = [];
-
-    for (const asset of reserves) {
-      if (filterVaultId && asset.toLowerCase() !== filterVaultId) {
-        continue;
-      }
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data: any = await client.readContract({ // ABI-decoded reserve data struct — no generated type
-          address: YEI_ADDRESS as `0x${string}`,
-          abi: yeiMarketAbi,
-          functionName: 'getReserveData',
-          args: [asset],
-        });
-
-        const aToken = data.aTokenAddress as `0x${string}`;
-        const varDebt = data.variableDebtTokenAddress as `0x${string}`;
-
-        const zero = '0x0000000000000000000000000000000000000000';
-        const [totalSupplyRaw, totalBorrowsRaw] = await Promise.all([
-          aToken && aToken !== zero ? client.readContract({ address: aToken, abi: erc20Abi, functionName: 'totalSupply' }) as Promise<bigint> : Promise.resolve(0n),
-          varDebt && varDebt !== zero ? client.readContract({ address: varDebt, abi: erc20Abi, functionName: 'totalSupply' }) as Promise<bigint> : Promise.resolve(0n),
-        ]);
-
-        const utilizationRate = computeUtilizationRate(totalBorrowsRaw, totalSupplyRaw);
-
-        const supplyApy = (toNum(data.currentLiquidityRate) / RAY) * 100;
-        const borrowApy = (toNum(data.currentVariableBorrowRate) / RAY) * 100;
-
-        const liquidityScore = calculateLiquidityScore(utilizationRate);
-        const yieldScore = calculateYieldScore(supplyApy, borrowApy, utilizationRate);
-
-        results.push({ vaultId: asset, apy: supplyApy, yieldScore, liquidityScore, protocol: "yei" });
-        if (filterVaultId) break;
-      } catch (e) {
-        // Skip asset on error but continue others
-        if (!filterVaultId) continue;
-        // If filtering and an error occurs for the target vault, respond 404
-        return NextResponse.json({ error: 'Vault not found' }, { status: 404 });
-      }
-    }
-
-    if (filterVaultId) {
-      if (results.length === 0) {
-        return NextResponse.json({ error: 'Vault not found' }, { status: 404 });
-      }
-      setCached(cacheKey, results[0]);
-      return NextResponse.json(results[0]);
-    }
-    setCached(cacheKey, results);
-    return NextResponse.json(results);
+    const result = await fetchYeiData(filterVaultId);
+    return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof Error && error.message === "Vault not found") {
+      return NextResponse.json({ error: 'Vault not found' }, { status: 404 });
+    }
     return NextResponse.json({ error: 'Failed to fetch YEI data' }, { status: 500 });
   }
 }

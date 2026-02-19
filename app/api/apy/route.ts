@@ -1,58 +1,34 @@
 import { NextResponse } from "next/server";
 import { getCached, setCached } from "@/lib/utils/simple-api-cache";
-
-const TAKARA_API = "/api/protocols/takara";
-const YEI_API = "/api/protocols/yei";
-
-function getVaultIdParam(req: Request) {
-  const url = new URL(req.url);
-  return url.searchParams.get("vaultId");
-}
+import { fetchTakaraData, type TakaraVaultResult } from "@/app/api/protocols/takara/route";
+import { fetchYeiData, type YeiVaultResult } from "@/app/api/protocols/yei/route";
 
 export async function GET(req: Request) {
   try {
-    const vaultId = getVaultIdParam(req);
-    const cacheKey = `apy:${vaultId || 'all'}`;
+    const url = new URL(req.url);
+    const vaultId = url.searchParams.get("vaultId");
+    const filterVaultId = vaultId?.toLowerCase() || null;
+
+    const cacheKey = `apy:${filterVaultId || 'all'}`;
     const cached = getCached(cacheKey);
     if (cached) return NextResponse.json(cached);
 
-    // Get origin from request
-    const url = new URL(req.url);
-    const origin = url.origin;
+    // Call protocol data-fetching functions directly (no HTTP self-request)
+    let takaraData: TakaraVaultResult | TakaraVaultResult[] | null = null;
+    let yeiData: YeiVaultResult | YeiVaultResult[] | null = null;
+    let takaraError: string | undefined;
+    let yeiError: string | undefined;
 
-    const takaraUrl = vaultId ? `${origin}${TAKARA_API}?vaultId=${vaultId}` : `${origin}${TAKARA_API}`;
-    const yeiUrl = vaultId ? `${origin}${YEI_API}?vaultId=${vaultId}` : `${origin}${YEI_API}`;
-
-
-    let takaraData, yeiData;
-    let takaraError, yeiError;
-
-    // Fetch Takara
     try {
-      const takaraRes = await fetch(takaraUrl);
-      if (!takaraRes.ok) {
-        takaraError = `Takara API failed: ${takaraRes.status} ${takaraRes.statusText}`;
-        takaraData = null;
-      } else {
-        takaraData = await takaraRes.json();
-      }
+      takaraData = await fetchTakaraData(filterVaultId);
     } catch (err) {
-      takaraError = `Takara fetch error: ${err}`;
-      takaraData = null;
+      takaraError = `Takara error: ${err}`;
     }
 
-    // Fetch Yei
     try {
-      const yeiRes = await fetch(yeiUrl);
-      if (!yeiRes.ok) {
-        yeiError = `Yei API failed: ${yeiRes.status} ${yeiRes.statusText}`;
-        yeiData = null;
-      } else {
-        yeiData = await yeiRes.json();
-      }
+      yeiData = await fetchYeiData(filterVaultId);
     } catch (err) {
-      yeiError = `Yei fetch error: ${err}`;
-      yeiData = null;
+      yeiError = `Yei error: ${err}`;
     }
 
     // If either failed, return error with details
@@ -67,16 +43,18 @@ export async function GET(req: Request) {
     }
 
     // Calculate APYs
-    let takaraApy, yeiApy;
-    if (vaultId) {
-      takaraApy = takaraData?.apy ?? 0;
-      yeiApy = yeiData?.apy ?? 0;
+    let takaraApy: number, yeiApy: number;
+    if (filterVaultId) {
+      takaraApy = (takaraData as TakaraVaultResult)?.apy ?? 0;
+      yeiApy = (yeiData as YeiVaultResult)?.apy ?? 0;
     } else {
-      takaraApy = Array.isArray(takaraData) && takaraData.length > 0
-        ? takaraData.reduce((sum, v) => sum + (v.apy ?? 0), 0) / takaraData.length
+      const takaraArr = takaraData as TakaraVaultResult[];
+      const yeiArr = yeiData as YeiVaultResult[];
+      takaraApy = Array.isArray(takaraArr) && takaraArr.length > 0
+        ? takaraArr.reduce((sum, v) => sum + (v.apy ?? 0), 0) / takaraArr.length
         : 0;
-      yeiApy = Array.isArray(yeiData) && yeiData.length > 0
-        ? yeiData.reduce((sum, v) => sum + (v.apy ?? 0), 0) / yeiData.length
+      yeiApy = Array.isArray(yeiArr) && yeiArr.length > 0
+        ? yeiArr.reduce((sum, v) => sum + (v.apy ?? 0), 0) / yeiArr.length
         : 0;
     }
 
@@ -90,7 +68,6 @@ export async function GET(req: Request) {
     setCached(cacheKey, result);
     return NextResponse.json(result);
   } catch (error) {
-    // Top-level error
     return NextResponse.json({ error: `APY route failed: ${error}` }, { status: 500 });
   }
 }
