@@ -268,17 +268,7 @@ const CrossChainDepositFlowInner: React.FC<CrossChainDepositFlowProps> = ({
             position: "relative",
           }}
         >
-          <div
-            style={{
-              width: "48px",
-              height: "48px",
-              border: "4px solid #f3f4f6",
-              borderTopColor: "#336AFD",
-              borderRadius: "50%",
-              margin: "0 auto 16px",
-              animation: "spin 1s linear infinite",
-            }}
-          />
+          <div className="w-12 h-12 border-4 border-gray-100 border-t-[#336AFD] rounded-full animate-spin mx-auto mb-4" />
           <h3
             style={{ fontSize: "18px", fontWeight: 600, marginBottom: "8px" }}
           >
@@ -289,15 +279,6 @@ const CrossChainDepositFlowInner: React.FC<CrossChainDepositFlowProps> = ({
               ? "Preparing your account"
               : "This may take a few seconds"}
           </p>
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-          `,
-            }}
-          />
         </div>
       </div>
     );
