@@ -390,6 +390,49 @@ patch(
   "sn-7702-sender-cjs"
 );
 
+// --- Fix 9: Bypass "Address not available" guard + fix nonce call ---
+//
+// Problem: The deposit execution function has a guard:
+//   if(!D) throw new Error("Address not available")   (ESM, D = Privy embedded wallet)
+//   if(!W) throw new Error("Address not available")   (CJS, W = Privy embedded wallet)
+// This throws BEFORE reaching the patched user/to/sender calls, because D/W
+// (Privy embedded wallet) is always undefined when using RainbowKit.
+//
+// The nonce call immediately after also uses D/W directly:
+//   ze = await qt(D, Re)             (ESM)
+//   Ze.getAccountNonce(W, je)        (CJS)
+//
+// Fix: bypass the guard when externalWalletAddress (G/O) is provided,
+// and use G||D / O||W for the nonce call.
+
+patch(
+  "index.js",
+  'if(!D)throw new Error("Address not available")',
+  'if(!G&&!D)throw new Error("Address not available")',
+  "sn-address-guard-esm"
+);
+
+patch(
+  "index.cjs.js",
+  'if(!W)throw new Error("Address not available")',
+  'if(!O&&!W)throw new Error("Address not available")',
+  "sn-address-guard-cjs"
+);
+
+patch(
+  "index.js",
+  "await qt(D,Re)",
+  "await qt(G||D,Re)",
+  "sn-nonce-addr-esm"
+);
+
+patch(
+  "index.cjs.js",
+  "getAccountNonce(W,je)",
+  "getAccountNonce(O||W,je)",
+  "sn-nonce-addr-cjs"
+);
+
 // ── Verification step ────────────────────────────────────────────────────────
 // After all patches run, verify the key new patterns are present in both
 // bundle files. If any check fails, exit(1) to fail the build immediately.
@@ -419,5 +462,11 @@ verify("index.cjs.js","!$&&!O){if(!W||!J)",            "sn-skip-privy-exec — C
 // Fix 8: external wallet fallback for 7702 deposit addresses
 verify("index.js",    "user:G||D,isDeposit:!0",        "sn-7702-submit-user — ESM");
 verify("index.cjs.js","user:O||W,isDeposit:!0",        "sn-7702-submit-user — CJS");
+
+// Fix 9: address guard + nonce call
+verify("index.js",    '!G&&!D)throw new Error("Address not available")', "sn-address-guard — ESM");
+verify("index.cjs.js",'!O&&!W)throw new Error("Address not available")', "sn-address-guard — CJS");
+verify("index.js",    "await qt(G||D,Re)",                                "sn-nonce-addr — ESM");
+verify("index.cjs.js","getAccountNonce(O||W,je)",                         "sn-nonce-addr — CJS");
 
 console.log("[patch-spiceflow] All patches applied and verified.");
