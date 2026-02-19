@@ -299,7 +299,10 @@ export default function OpportunitiesPage() {
       const token = modalType === "deposit" ? depositTokens[0] : withdrawTokens[0];
       if (token) setSelectedToken(token);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depositTokens, withdrawTokens]);
+  // Note: selectedToken and modalType are intentionally omitted — this effect should
+  // only run when token lists change (to pick a default), not on every modalType change.
 
   useEffect(() => {
     let cancelled = false;

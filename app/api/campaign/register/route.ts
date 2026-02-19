@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { addCampaignRegistration } from "@/actions/mongo.action";
 import { isAddress } from "viem";
 
@@ -7,8 +7,59 @@ function isValidHandle(handle: string): boolean {
   return typeof handle === "string" && handle.trim().length > 0 && handle.length <= 64;
 }
 
-export async function POST(request: Request) {
+// ── Simple in-memory IP rate limiter ─────────────────────────────────────────
+// Allows MAX_REQUESTS per IP within WINDOW_MS.
+// NOTE: This resets on each cold-start (serverless). For persistent rate
+// limiting across instances, use Redis / Upstash instead.
+const WINDOW_MS = 60_000; // 1 minute
+const MAX_REQUESTS = 5;
+
+const ipRequests = new Map<string, { count: number; windowStart: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = ipRequests.get(ip);
+
+  if (!record || now - record.windowStart > WINDOW_MS) {
+    ipRequests.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+
+  if (record.count >= MAX_REQUESTS) {
+    return true;
+  }
+
+  record.count++;
+  return false;
+}
+
+// Clean up stale entries periodically to avoid unbounded memory growth
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of ipRequests.entries()) {
+    if (now - record.windowStart > WINDOW_MS * 2) {
+      ipRequests.delete(ip);
+    }
+  }
+}, WINDOW_MS * 5);
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function POST(request: NextRequest) {
   try {
+    // Extract client IP from standard headers (works on Vercel, Cloudflare, etc.)
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again in a minute." },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { xUsername, telegram, walletAddress } = body as {
       xUsername?: unknown;
@@ -63,7 +114,10 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json(
+      { success: true, updated: !result.upserted },
+      { status: 200 }
+    );
   } catch (error: unknown) {
     console.error("[campaign/register] Error:", error);
     return NextResponse.json(
