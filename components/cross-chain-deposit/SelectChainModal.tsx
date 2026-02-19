@@ -24,7 +24,8 @@ export const SelectChainModal: React.FC<SelectChainModalProps> = ({
 }) => {
   const handleChainSelect = (chainIdStr: string) => {
     const chainId = parseInt(chainIdStr, 10);
-    onChainSelect?.(chainId);
+    // Guard against NaN (e.g. SDK passes unexpected value)
+    onChainSelect?.(isNaN(chainId) ? undefined : chainId);
   };
 
   if (!isOpen) return null;

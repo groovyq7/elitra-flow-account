@@ -82,6 +82,9 @@ export const CrossChainAccountBadge: React.FC = () => {
       <button
         ref={badgeRef}
         onClick={toggleAccountPopup}
+        aria-label={`Elitra Account${hasBalance ? ` — balance ${formatCurrency(crossChainBalance)}` : ""} — ${isAccountPopupOpen ? "close" : "open"} account panel`}
+        aria-expanded={isAccountPopupOpen}
+        aria-haspopup="true"
         className={`
           flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium
           transition-all duration-200 border
