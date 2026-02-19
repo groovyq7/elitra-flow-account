@@ -1,8 +1,9 @@
 "use client"
 
 import { useAccount, useReadContract } from "wagmi"
-import { parseUnits, formatUnits, erc20Abi } from "viem"
+import { formatUnits, erc20Abi } from "viem"
 import { VAULT_ABI, ERC20_ABI } from "@/lib/contracts/vault-abi"
+
 export function useBalance(tokenAddress: string) {
   const { address } = useAccount()
 
@@ -20,7 +21,7 @@ export function useBalance(tokenAddress: string) {
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && !!tokenAddress,
       refetchInterval: 30000,
     },
   })
@@ -38,6 +39,15 @@ export function useBalance(tokenAddress: string) {
 }
 
 export function useTotalSupply(tokenAddress: string) {
+  // Read share token decimals — do NOT hardcode 18; vault share tokens can have
+  // varying precision (e.g. USDC-denominated vaults use 6 decimals).
+  const { data: decimals } = useReadContract({
+    address: tokenAddress as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "decimals",
+    query: { enabled: !!tokenAddress },
+  })
+
   // Read total supply of the vault share token
   const { data: totalSupply } = useReadContract({
     address: tokenAddress as `0x${string}`,
@@ -46,10 +56,12 @@ export function useTotalSupply(tokenAddress: string) {
     query: { enabled: !!tokenAddress },
   })
 
-  const formattedTotalSupply = formatUnits(totalSupply || BigInt(0), 18)
+  const decimalsNumber = typeof decimals === "number" ? decimals : decimals ? Number(decimals) : 18
+  const formattedTotalSupply = formatUnits(totalSupply || BigInt(0), decimalsNumber)
 
   return {
     totalSupply: totalSupply || BigInt(0),
+    decimals: decimalsNumber,
     formattedTotalSupply,
   }
 }
