@@ -1,5 +1,6 @@
-import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
+
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 
 import { useState, useEffect } from "react"
 import { useChainId, useSwitchChain } from "wagmi"

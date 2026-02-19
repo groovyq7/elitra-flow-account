@@ -1,5 +1,6 @@
-import { useSpiceStore } from "@/store/useSpiceStore";
 "use client";
+
+import { useSpiceStore } from "@/store/useSpiceStore";
 
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useWalletAddress } from "@/components/providers/WalletAddressContext";

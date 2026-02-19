@@ -1,5 +1,6 @@
-import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
+
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 
 import { useReadContract } from "wagmi"
 import { useSpiceStore } from "@/store/useSpiceStore"

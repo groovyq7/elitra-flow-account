@@ -1,5 +1,6 @@
-import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 "use client"
+
+import { useWalletAddress } from "@/components/providers/WalletAddressContext";
 
 import { useQuery } from "@tanstack/react-query"
 import { useChainId } from "wagmi"
