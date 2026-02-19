@@ -128,11 +128,6 @@ export interface UserPnlInfo {
   underlyingValueUSD: string | number;
 }
 
-// Global type declarations for MongoDB
-declare global {
-  var _mongoClientPromise: Promise<import("mongodb").MongoClient> | undefined;
-}
-
 export interface Call {
   to: `0x${string}`;
   value: bigint;
