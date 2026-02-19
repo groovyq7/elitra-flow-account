@@ -13,6 +13,7 @@ import {
 import { citreaTestnet } from "viem/chains";
 import { useAccount, useChainId } from 'wagmi'
 import { identifyUser, resetUser, trackChainChanged, trackWalletConnected, trackWalletDisconnected } from '@/lib/analytics'
+import { useSpiceStore } from '@/store/useSpiceStore'
 
 export function WagmiProviderWrapper({
   children,
@@ -49,6 +50,7 @@ export function WagmiProviderWrapper({
 function WagmiAnalyticsTracker() {
   const { address, isConnected } = useAccount()
   const chainId = useChainId()
+  const resetStore = useSpiceStore((s) => s.resetStore)
 
   useEffect(() => {
     if (isConnected && address) {
@@ -57,8 +59,11 @@ function WagmiAnalyticsTracker() {
     } else {
       resetUser()
       trackWalletDisconnected()
+      // Clear persisted cross-chain balance and history so a different wallet
+      // connecting afterwards starts with a clean slate.
+      resetStore()
     }
-  }, [isConnected, address, chainId])
+  }, [isConnected, address, chainId, resetStore])
 
   useEffect(() => {
     if (chainId != null) trackChainChanged(chainId)

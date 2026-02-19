@@ -1,3 +1,27 @@
+/**
+ * Campaign registration API route.
+ *
+ * DATA MINIMIZATION / GDPR NOTE:
+ * This endpoint stores the following personal data in MongoDB:
+ *   - walletAddress  — pseudonymous (public blockchain address, not directly PII
+ *                      but can be linked to identity; treated as personal data)
+ *   - xUsername      — social handle (may identify a natural person)
+ *   - telegram       — social handle (may identify a natural person)
+ *   - created_at     — registration timestamp
+ *   - updated_at     — last-updated timestamp
+ *
+ * Lawful basis: Legitimate interest / contract performance (campaign participation).
+ * Retention: Review and purge records when the campaign ends.
+ * No passwords, emails, or government identifiers are stored.
+ *
+ * NOSQL INJECTION NOTE:
+ * All user inputs are validated before use:
+ *   - walletAddress → validated by viem isAddress() (checksummed hex, no operators)
+ *   - xUsername / telegram → validated by isValidHandle() (string, max 64 chars)
+ * The MongoDB filter uses only the validated walletAddress as the key.
+ * Values are used exclusively in $set (not in query operators), so NoSQL
+ * injection via operator injection (e.g. { $gt: "" }) is not possible.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { addCampaignRegistration } from "@/actions/mongo.action";
 import { isAddress } from "viem";

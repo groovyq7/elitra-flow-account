@@ -79,6 +79,10 @@ interface SpiceState {
 
   // Withdraw tracking
   addWithdraw: (record: WithdrawRecord) => void;
+
+  // Reset all persisted data — call on wallet disconnect to prevent a
+  // different user from seeing the previous wallet's history.
+  resetStore: () => void;
 }
 
 export const useSpiceStore = create<SpiceState>()(
@@ -154,6 +158,20 @@ export const useSpiceStore = create<SpiceState>()(
           ),
         }));
       },
+
+      resetStore: () =>
+        set({
+          crossChainBalance: 0,
+          depositHistory: [],
+          supplyHistory: [],
+          withdrawHistory: [],
+          // Also close any open modals — no wallet means no active flows
+          isDepositOpen: false,
+          isWithdrawOpen: false,
+          isSupplyOpen: false,
+          supplyAsset: null,
+          isAccountPopupOpen: false,
+        }),
 
       getSuppliedAmount: (assetAddress: string) => {
         const { supplyHistory } = get();

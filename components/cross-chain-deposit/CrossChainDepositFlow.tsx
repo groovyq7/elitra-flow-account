@@ -5,6 +5,7 @@ import { useAccount, useSwitchChain } from "wagmi";
 import { SelectChainModal } from "./SelectChainModal";
 import { CrossChainDepositModal } from "./CrossChainDepositModal";
 import { AirdropModal } from "./Airdrop";
+import { track, trackModalOpen, trackDepositSuccess } from "@/lib/analytics";
 
 export interface CrossChainDepositFlowProps {
   isOpen: boolean;
@@ -16,6 +17,11 @@ export interface CrossChainDepositFlowProps {
 }
 
 type FlowStep = "select-chain" | "provider-login" | "airdrop" | "deposit";
+// TODO: 421614 (Arbitrum Sepolia) is included in SUPPORTED_CHAINS from SpiceDepositModal
+// but not in this union type. If 421614 is selected via that entry point, it is
+// cast via `as SupportedChainId` and passed through — the SDK handles it at runtime.
+// Add 421614 here (and in CrossChainDepositModal / AirdropModal interfaces) once
+// the airdrop flow is confirmed to support Arbitrum Sepolia.
 type SupportedChainId = 11155111 | 84532 | 5115;
 
 export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
@@ -51,6 +57,7 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   const handleChainSelect = useCallback(
     (chainId: number | undefined) => {
       chainSelectedRef.current = true;
+      if (chainId != null) track('cross_chain_chain_selected', { chainId });
       setSelectedChainId(chainId as SupportedChainId | undefined);
       setCurrentStep("provider-login");
       loginTriggeredRef.current = false;
@@ -89,6 +96,7 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
 
   const handleDepositComplete = useCallback(() => {
     completedRef.current = true;
+    trackDepositSuccess({ type: 'cross_chain_deposit', chainId: selectedChainId });
     if (onComplete && selectedChainId) {
       onComplete(selectedChainId);
     }
@@ -98,6 +106,7 @@ export const CrossChainDepositFlow: React.FC<CrossChainDepositFlowProps> = ({
   // Previously a 300ms delayed reset on close, which races with rapid close→reopen.
   useEffect(() => {
     if (isOpen) {
+      trackModalOpen('deposit_to_account');
       setCurrentStep(initialChainId ? "provider-login" : "select-chain");
       setSelectedChainId(initialChainId as SupportedChainId | undefined);
       loginTriggeredRef.current = false;

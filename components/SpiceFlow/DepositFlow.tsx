@@ -3,6 +3,7 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useAccount } from "wagmi";
 import { useSpiceStore } from "@/store/useSpiceStore";
+import { trackDepositSuccess, trackDepositFailed, trackModalOpen } from "@/lib/analytics";
 // spiceflowConfig constants used by other components
 
 // Auto-close delay after successful deposit so user sees the SDK success banner
@@ -91,6 +92,11 @@ export const DepositFlow: React.FC = () => {
     };
   }, []);
 
+  // Track modal open for analytics
+  useEffect(() => {
+    if (isDepositOpen) trackModalOpen('spicedeposit');
+  }, [isDepositOpen]);
+
   // ESC key to close
   useEffect(() => {
     if (!isDepositOpen) return;
@@ -132,8 +138,12 @@ export const DepositFlow: React.FC = () => {
             sourceChain: "Elitra Account",
             timestamp: Date.now(),
           });
+
+          // Track conversion event
+          trackDepositSuccess({ type: 'spice_deposit', asset, amount, usdValue, source });
         } catch (err) {
           console.warn("[DepositFlow] Failed to record deposit:", err);
+          trackDepositFailed({ type: 'spice_deposit', reason: err instanceof Error ? err.message : String(err) });
         }
       }
 
