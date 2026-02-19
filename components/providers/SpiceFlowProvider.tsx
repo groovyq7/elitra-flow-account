@@ -34,7 +34,7 @@ export function SpiceFlowProvider({ children }: { children: React.ReactNode }) {
   return (
     <SpiceFlowProviderBase
       provider="privy"
-      privyAppId={"cmli6tyqk0599js0c62h22u4e"}
+      privyAppId={"cmlsy3eup004z0cjskfxwce8n"}
       supportedChainIds={[...SUPPORTED_CHAIN_IDS]}
       mode={SPICEFLOW_MODE}
       nativeChainId={NATIVE_CHAIN_ID}
